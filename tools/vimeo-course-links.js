@@ -58,7 +58,13 @@
   }
   console.log('[evd] %d lessons across %d sections', lessons.length, sections.length);
 
-  // load each lesson out of sight and read the player address from it
+  // Load each lesson out of sight and read the player address from it. A
+  // lesson page is heavy, so they are fetched a few at a time rather than one
+  // after another - waiting the full timeout on each in turn takes minutes on
+  // a course of any size.
+  const PATIENCE = 14;        // seconds to give one lesson
+  const AT_ONCE = 3;
+
   const readLesson = href => new Promise(resolve => {
     const frame = document.createElement('iframe');
     frame.style.cssText = 'position:fixed;left:-9999px;top:0;width:1280px;height:800px;border:0';
@@ -75,18 +81,27 @@
       } catch (e) {
         clearInterval(timer); frame.remove(); resolve(null); return;
       }
-      if (url || tries >= 25) {           // 25 seconds is generous
+      if (url || tries >= PATIENCE) {
         clearInterval(timer); frame.remove(); resolve(url);
       }
     }, 1000);
   });
 
   const found = [];
-  for (const l of lessons) {
-    const url = await readLesson(l.href);
-    console.log('[evd] %s %s %s', l.number, l.title.slice(0, 40), url ? 'ok' : 'MISSED');
-    found.push(Object.assign({ url }, l));
-  }
+  window.evdProgress = { done: 0, of: lessons.length };
+  const queue = lessons.slice();
+  const workers = Array.from({ length: Math.min(AT_ONCE, queue.length) }, async () => {
+    while (queue.length) {
+      const l = queue.shift();
+      const url = await readLesson(l.href);
+      window.evdProgress.done++;
+      console.log('[evd] %s/%s  %s %s %s', window.evdProgress.done, lessons.length,
+                  l.number, l.title.slice(0, 40), url ? 'ok' : 'MISSED');
+      found.push(Object.assign({ url }, l));
+    }
+  });
+  await Promise.all(workers);
+  found.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
 
   const lines = found.filter(f => f.url)
     .map(f => f.url + ' | ' + f.number + '_' + camel(f.title));

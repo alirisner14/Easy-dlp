@@ -163,17 +163,41 @@ For a whole course, the course page lists every lesson address; copy them out
 and paste the lot. Do not paste the raw page source here — unlike Bunny, that
 pulls in every link on the page.
 
-### Vimeo — copy the player address
+### Vimeo — run the collector, or copy one address
 
-1. Open the lesson.
-2. Right-click the video → **Copy video address**, or find the `<iframe>` in
-   `F12` → Elements. You want `https://player.vimeo.com/video/…`.
-3. Paste that with a file name.
+For a whole course, `tools/vimeo-course-links.js` collects the lot:
+
+1. Open the course page — the one listing the lessons — while signed in.
+2. `F12` → Console → paste the script → Enter.
+3. Wait a few seconds a lesson, then **Copy** and **Paste** in the app.
+
+Lesson addresses are listed on the course page, but each lesson's Vimeo id is
+only put into its own page by scripts after it loads, so fetching those pages
+in the background finds nothing. The script gets around that by loading each
+lesson in a hidden frame, which runs its scripts as normal, then reading the
+player address out of it. Nothing is downloaded and nothing on the site is
+changed. Tested on a seven lesson course: 6 collected, the other having no
+video on it.
+
+For a single lesson, skip the script: right-click the video → **Copy video
+address**, or find the `<iframe>` in `F12` → Elements. You want
+`https://player.vimeo.com/video/…`.
 
 Course-embedded Vimeo videos often need no cookies and no referer at all.
-Collecting a whole course is not automated: the lesson addresses are usually
-listed, but the Vimeo id is put into each page by scripts after it loads, so
-fetching those pages in the background returns nothing useful.
+
+### Running the collector scripts without pasting them every time
+
+A `.js` file cannot be dragged into the Console — it has to be text. Pasting
+it works (the first time, Chrome makes you type `allow pasting` before it
+accepts one), but for anything you will do twice, keep it as a snippet:
+
+1. `F12` → **Sources** → **Snippets** in the left pane (under **»** if the
+   pane is narrow).
+2. **New snippet**, paste the script in, give it a name.
+3. On any course page after that: open the snippet and press `Ctrl+Enter`.
+
+Snippets run against whatever page is in front, so one copy serves every
+course on that site, and they survive restarts.
 
 ### Signing in
 
