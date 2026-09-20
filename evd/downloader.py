@@ -153,6 +153,19 @@ _PERMANENT = (
 )
 
 
+# .../<video id>/720p/video.m3u8 - one fixed size, which many videos on the
+# same service simply do not publish
+_FIXED_SIZE = re.compile(
+    r"^(https?://[^/]*b-cdn\.net/[0-9a-fA-F-]{36})/[0-9]{3,4}p/video\.m3u8(\?.*)?$",
+    re.I)
+
+
+def master_playlist(url: str) -> str | None:
+    """The every-size address for a link that asks for one fixed size."""
+    match = _FIXED_SIZE.match((url or "").strip())
+    return match.group(1) + "/playlist.m3u8" if match else None
+
+
 def is_transient(error: str) -> bool:
     text = (error or "").lower()
     if any(p in text for p in _PERMANENT):
@@ -662,6 +675,21 @@ class Engine:
             job.status = DONE
             job.pct = 1.0
             job.stage = ""
+        elif master_playlist(job.url) and "404" in (job.error or "") and not job.cancelled:
+            # A link copied from the network tab points at one resolution, and
+            # plenty of videos are not published that way - they answer 404 on
+            # .../720p/video.m3u8 while serving every size from the master
+            # playlist. Swap to the master and try once, rather than reporting
+            # a missing video that is not missing.
+            job.url = master_playlist(job.url)
+            job.status = QUEUED
+            job.retry_at = time.time() + 2
+            job.stage = "trying the full playlist"
+            self._log("no video at that resolution, using the master playlist "
+                      "instead: %s" % job.url, job)
+            job.error = ""
+            self.touch(job.id)
+            return
         elif (job.attempts < MAX_AUTO_RETRIES and is_transient(job.error)
               and not job.cancelled):
             # A dropped share or a mangled fragment usually works second time,

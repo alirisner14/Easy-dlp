@@ -134,8 +134,14 @@ def _from_json(text: str) -> list[tuple[str, str, str]]:
     return found
 
 
-def lessons_from_page(text: str, quality: str = "720p") -> list[tuple[str, str]]:
+def lessons_from_page(text: str) -> list[tuple[str, str]]:
     """Every lesson on a copied course page, as (url, name) pairs.
+
+    The address built is the master playlist rather than a fixed resolution.
+    Not every video is published with per-resolution paths - plenty answer 404
+    on .../720p/video.m3u8 while offering the same 720p inside the master - and
+    the master also lets the Quality setting decide, instead of the size being
+    fixed here.
 
     Returns nothing at all when the text is not a page we recognise, which
     lets the caller fall back to reading it as a plain list of links.
@@ -155,5 +161,5 @@ def lessons_from_page(text: str, quality: str = "720p") -> list[tuple[str, str]]
             # the lesson being played shows a play icon where its number
             # would be, so let a numbered copy of it win
             best[guid] = (host, name)
-    return [("https://%s/%s/%s/video.m3u8" % (best[g][0], g, quality), best[g][1])
+    return [("https://%s/%s/playlist.m3u8" % (best[g][0], g), best[g][1])
             for g in order]

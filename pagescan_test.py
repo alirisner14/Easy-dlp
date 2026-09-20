@@ -36,7 +36,8 @@ ok(len(rows) == 53, "every lesson found (%d)" % len(rows))
 ok(len(set(u for u, _ in rows)) == 53, "no url repeated")
 ok(len(set(n for _, n in rows)) == 53, "no two files would collide")
 ok(all(n for _, n in rows), "every one is named")
-ok(all(u.endswith("/720p/video.m3u8") for u, _ in rows), "urls point at the manifest")
+ok(all(u.endswith("/playlist.m3u8") for u, _ in rows),
+   "urls point at the master playlist, not one fixed size")
 ok(rows[0][1] == "1.01_CharacterDesignIntroduction",
    "first is numbered and titled (%r)" % rows[0][1])
 ok(rows[52][1] == "3.17_FinalThoughts", "last one too (%r)" % rows[52][1])
@@ -81,9 +82,11 @@ ok(not any(c in name for c in '<>:"/\\|?*'), "no characters Windows refuses (%r)
 ok(name == "2.03_ColourRedBlueGrey", "entities decoded and joined up (%r)" % name)
 ok(name.startswith("2.03_"), "still numbered (%r)" % name)
 
-print("5. the quality can be pointed elsewhere", flush=True)
-rows = pagescan.lessons_from_page(read("lesson-page.html"), quality="1080p")
-ok(all("/1080p/video.m3u8" in u for u, _ in rows), "1080p urls when asked")
+print("5. no resolution is baked into the address", flush=True)
+rows = pagescan.lessons_from_page(read("lesson-page.html"))
+ok(not any("/720p/" in u or "/1080p/" in u for u, _ in rows),
+   "a video published without per-size paths still works, and the Quality "
+   "setting decides the size")
 
 print(("\nALL PASS" if not fails else "\n%d FAILED" % len(fails)), flush=True)
 sys.exit(1 if fails else 0)
