@@ -6,6 +6,8 @@ surfaces stack correctly and genuinely show what is behind them.
 """
 from __future__ import annotations
 
+import os
+
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 SS = 4  # supersample factor for crisp small geometry
@@ -278,8 +280,42 @@ def icon(name: str, size: int = 18, color=(238, 242, 255, 255), width: float = 1
     return img.resize((size, size), Image.LANCZOS)
 
 
+_LOGO_CACHE: dict[int, Image.Image] = {}
+
+
+def _logo_file() -> str | None:
+    """The logo shipped with the app, whether running from source or packaged."""
+    import sys
+    roots = [os.path.dirname(os.path.dirname(os.path.abspath(__file__)))]
+    bundled = getattr(sys, "_MEIPASS", None)
+    if bundled:
+        roots.insert(0, bundled)
+    for root in roots:
+        path = os.path.join(root, "docs", "Easy-dlp_Logo.png")
+        if os.path.isfile(path):
+            return path
+    return None
+
+
 def app_icon(size: int = 64) -> Image.Image:
-    """Window/taskbar icon: gradient glass tile with a download glyph."""
+    """The app's mark, at whatever size is asked for.
+
+    The drawn tile below was the icon before there was a logo, and it stays as
+    the fallback so the app still has a face when run from a copy without the
+    artwork.
+    """
+    if size not in _LOGO_CACHE:
+        path = _logo_file()
+        _LOGO_CACHE[size] = None
+        if path:
+            try:
+                logo = Image.open(path).convert("RGBA")
+                _LOGO_CACHE[size] = logo.resize((size, size), Image.LANCZOS)
+            except Exception:
+                _LOGO_CACHE[size] = None
+    if _LOGO_CACHE[size] is not None:
+        return _LOGO_CACHE[size].copy()
+
     n = size * 2
     tile = gradient((n, n), (124, 92, 255), (35, 211, 232))
     tile.putalpha(rounded_mask((n, n), int(n * 0.24)))

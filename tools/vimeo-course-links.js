@@ -10,7 +10,7 @@
  * in a hidden frame, which runs its scripts as normal, and the Vimeo address
  * is read straight out of it. The site's own session is used, so nothing
  * needs signing in again. It ends with a panel you can copy from, in the
- * "url | file name" form that Easy Video Downloader's Paste button reads.
+ * "url | file name" form that Easy-dlp's Paste button reads.
  *
  * To use it:
  *   1. open the course page - the one listing the lessons - while signed in
@@ -116,7 +116,7 @@
     + 'box-shadow:0 20px 60px rgba(0,0,0,.6)';
   wrap.innerHTML = '<div style="font-size:16px;font-weight:600">'
     + lines.length + ' of ' + lessons.length + ' lesson links</div>'
-    + '<div style="opacity:.8">Copy, then press Paste in Easy Video Downloader.'
+    + '<div style="opacity:.8">Copy, then press Paste in Easy-dlp.'
     + (missed ? ' <b style="color:#ffb4b4">Missed: ' + missed + '</b> - run it again.' : '')
     + '</div>';
 

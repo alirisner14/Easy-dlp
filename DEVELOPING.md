@@ -1,4 +1,4 @@
-# Working on Easy Video Downloader
+# Working on Easy-dlp
 
 ## Running it from source
 
@@ -16,7 +16,7 @@ embedding thumbnails and converting audio.
 python build_exe.py
 ```
 
-PyInstaller produces `dist/Easy Video Downloader.exe`, about 18 MB. The exe is
+PyInstaller produces `dist/Easy-dlp.exe`, about 18 MB. The exe is
 not kept in the repository because it is rebuilt from source in a minute.
 
 **The app must be closed before building**, or PyInstaller cannot replace the

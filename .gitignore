@@ -41,3 +41,10 @@ dist/
 page_out/
 fixtures/
 *.log
+
+# stray downloads: a test run pointed at the project folder once, and a
+# 2.4 GB video ended up in a commit
+file-uploads*
+*.mp4
+*.mkv
+*.webm

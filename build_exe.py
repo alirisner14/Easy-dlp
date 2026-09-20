@@ -2,11 +2,12 @@
 
     python build_exe.py
 
-Produces dist/Easy Video Downloader.exe.  Build files are kept out of the
+Produces dist/Easy-dlp.exe.  Build files are kept out of the
 project folder; only dist/ is written here.
 """
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -14,12 +15,20 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-NAME = "Easy Video Downloader"
-ICON = ROOT / "docs" / "app.ico"
+NAME = "Easy-dlp"
+LOGO = ROOT / "docs" / "Easy-dlp_Logo.ico"     # the real logo, when there is one
+ICON = ROOT / "docs" / "app.ico"               # otherwise one drawn from code
 
 
 def ensure_icon() -> Path:
-    """Render the window icon to a multi-size .ico for the executable."""
+    """The icon for the executable: the logo if present, else drawn from code.
+
+    This used to redraw app.ico on every build, which quietly threw away any
+    icon put there by hand - so a proper logo lives under its own name and is
+    never overwritten.
+    """
+    if LOGO.is_file():
+        return LOGO
     ICON.parent.mkdir(parents=True, exist_ok=True)
     sys.path.insert(0, str(ROOT))
     from evd import graphics as G
@@ -47,6 +56,9 @@ def main() -> int:
         "--windowed",         # no console window behind the GUI
         "--name", NAME,
         "--icon", str(icon),
+        # the window and taskbar icon are drawn from this at run time, so it
+        # has to travel inside the packaged app as well
+        "--add-data", "%s%sdocs" % (ROOT / "docs" / "Easy-dlp_Logo.png", os.pathsep),
         "--distpath", str(ROOT / "dist"),
         "--workpath", str(work / "build"),
         "--specpath", str(work),

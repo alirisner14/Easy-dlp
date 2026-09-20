@@ -1,4 +1,4 @@
-"""Easy Video Downloader - a glass-themed desktop front end for yt-dlp.
+"""Easy-dlp - a glass-themed desktop front end for yt-dlp.
 
 Run with:  python app.py
 """
@@ -34,7 +34,7 @@ def main() -> int:
     except Exception:
         import sys as _sys
         path = errors.log(*_sys.exc_info(), note="mainloop")
-        mb.showerror("Easy Video Downloader stopped",
+        mb.showerror("Easy-dlp stopped",
                      "Something went wrong. The details were written to:\n\n%s" % path)
         return 1
     return 0

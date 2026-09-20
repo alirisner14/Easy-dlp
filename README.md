@@ -1,4 +1,8 @@
-# Easy Video Downloader
+<p align="center">
+  <img src="docs/Easy-dlp_Logo.png" alt="Easy-dlp" width="160">
+</p>
+
+# Easy-dlp
 
 A dark, liquid-glass desktop front end for the `yt-dlp` command line, with a
 batch download queue.
@@ -7,7 +11,7 @@ batch download queue.
 
 ## Run it
 
-Double-click **`dist\Easy Video Downloader.exe`**. That is a single packaged
+Double-click **`dist\Easy-dlp.exe`**. That is a single packaged
 file with Python, tkinter and Pillow inside it, so nothing needs installing and
 you can move it wherever you like (Desktop, Start menu, pinned to the taskbar).
 
@@ -43,7 +47,7 @@ The app finds `yt-dlp` on PATH; running from source it also falls back to
 fails with a clear message. The header shows the detected `yt-dlp` version and
 whether ffmpeg was found.
 
-`Easy Video Downloader.bat` is a convenience launcher for the source version
+`Easy-dlp.bat` is a convenience launcher for the source version
 (starts it without a console window).
 
 ## Staging and downloading
@@ -377,7 +381,7 @@ evd/downloader.py       yt-dlp process management and progress parsing
 evd/config.py           settings persistence
 evd/errors.py           crash logging
 evd/ui.py               window layout and wiring
-build_exe.py            packages it into dist/Easy Video Downloader.exe
+build_exe.py            packages it into dist/Easy-dlp.exe
 ```
 
 Progress is read back through `--progress-template`, which emits

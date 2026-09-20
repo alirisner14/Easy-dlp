@@ -40,7 +40,7 @@ class App:
         self.settings = config.load()
 
         self.root = tk.Tk()
-        self.root.title("Easy Video Downloader")
+        self.root.title("Easy-dlp")
         self.root.configure(bg=T.BASE)
         # Pin the point-to-pixel conversion so the pixel layout always agrees
         # with the text it is sized around, whatever the display scaling.
@@ -317,7 +317,7 @@ class App:
         ph = ImageTk.PhotoImage(G.app_icon(34))
         self.photos.append(ph)
         cv.create_image(T.PAD, 14, image=ph, anchor="nw", tags="ui")
-        cv.create_text(T.PAD + 46, 16, text="Easy Video Downloader", fill=T.TEXT,
+        cv.create_text(T.PAD + 46, 16, text="Easy-dlp", fill=T.TEXT,
                        anchor="nw", font=T.f("title"), tags="ui")
         sub = "yt-dlp %s" % self.version
         sub += "  ·  ffmpeg ready" if self.engine.ffmpeg else "  ·  ffmpeg missing"
@@ -784,7 +784,7 @@ class App:
     def _write_batch_file(self, path, queued):
         try:
             with open(path, "w", encoding="utf-8") as fh:
-                fh.write("# Easy Video Downloader batch - %s\n"
+                fh.write("# Easy-dlp batch - %s\n"
                          % time.strftime("%Y-%m-%d %H:%M:%S"))
                 fh.write("# %d item%s, saved to %s\n"
                          % (len(queued), "" if len(queued) == 1 else "s",

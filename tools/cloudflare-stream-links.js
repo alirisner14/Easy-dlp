@@ -94,7 +94,7 @@
     + 'box-shadow:0 20px 60px rgba(0,0,0,.6)';
   wrap.innerHTML = '<div style="font-size:16px;font-weight:600">'
     + lines.length + ' of ' + rows.size + ' lesson links</div>'
-    + '<div style="opacity:.8">Copy, then press Paste in Easy Video Downloader. '
+    + '<div style="opacity:.8">Copy, then press Paste in Easy-dlp. '
     + 'These expire in about six hours.'
     + (missed ? ' <b style="color:#ffb4b4">Missed: ' + missed + '</b> - run it again.' : '')
     + '</div>';
