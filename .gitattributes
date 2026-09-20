@@ -1,0 +1,6 @@
+# keep line endings consistent in the repository whatever the editor does
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.exe binary
