@@ -30,33 +30,62 @@
   const camel = s => (s.match(/[A-Za-z0-9]+/g) || [])
     .map(w => w[0].toUpperCase() + w.slice(1)).join('');
 
-  // every lesson link on the page, kept in the order they are listed, with
-  // the section they sit under so the numbering matches the course
+  // These sites lay a course out in more than one way. A structured course
+  // numbers its lessons under sections; a library of tutorials is a list of
+  // posts with no numbering at all; and a tutorial can simply be a page of
+  // its own with the video on it. All three are worth handling, because the
+  // links come out the same either way.
+  const LESSON = /\/lessons\/\d+/;                 // a course lesson
+  const POST = /^\/c\/[A-Za-z0-9-]+\/[A-Za-z0-9-]+/;   // a tutorial post
+
   const lessons = [];
   const seen = new Set();
-  for (const a of document.querySelectorAll('a[href*="/lessons/"]')) {
+  for (const a of document.querySelectorAll('a[href]')) {
     const href = a.getAttribute('href') || '';
-    if (!/\/lessons\/\d+/.test(href) || seen.has(href)) continue;
+    const isLesson = LESSON.test(href);
+    const isPost = POST.test(href) && !LESSON.test(href);
+    if ((!isLesson && !isPost) || seen.has(href)) continue;
     seen.add(href);
-    const section = (href.match(/\/sections\/(\d+)/) || [])[1] || '0';
-    const title = (a.textContent || '').replace(/\s+/g, ' ').trim()
+    const section = (href.match(/\/sections\/(\d+)/) || [])[1] || '';
+    let title = (a.textContent || '').replace(/\s+/g, ' ').trim()
       .replace(/\b\d{1,2}:\d{2}\b/g, '').trim();
+    if (!title) title = decodeURIComponent(href.split('/').pop() || '').replace(/-/g, ' ');
     lessons.push({ href, section, title: title || 'Lesson' });
   }
+
+  // a single tutorial page: the video is right here, so there is nothing
+  // to walk
   if (!lessons.length) {
-    alert('No lessons found. Open the course page that lists the lessons.');
-    return;
+    const here = document.querySelector(VIMEO);
+    if (here) {
+      const name = (document.title || 'Video').split('|')[0].split('–')[0].trim();
+      lessons.push({ href: null, section: '', title: name,
+                     url: (here.src || '').split('?')[0] });
+    } else {
+      alert('Nothing found. Open a course page listing its lessons, a library '
+          + 'of tutorials, or a single tutorial page with the video on it.');
+      return;
+    }
   }
 
+  // Numbered by section where the site numbers them, otherwise straight
+  // through: a library of tutorials has no chapters to follow.
   const sections = [];
-  for (const l of lessons) if (!sections.includes(l.section)) sections.push(l.section);
+  for (const l of lessons) if (l.section && !sections.includes(l.section)) sections.push(l.section);
   const counters = {};
+  let plain = 0;
   for (const l of lessons) {
-    const s = sections.indexOf(l.section) + 1;
-    counters[s] = (counters[s] || 0) + 1;
-    l.number = s + '.' + String(counters[s]).padStart(2, '0');
+    if (l.section) {
+      const s = sections.indexOf(l.section) + 1;
+      counters[s] = (counters[s] || 0) + 1;
+      l.number = s + '.' + String(counters[s]).padStart(2, '0');
+    } else {
+      plain += 1;
+      l.number = String(plain).padStart(2, '0');
+    }
   }
-  console.log('[evd] %d lessons across %d sections', lessons.length, sections.length);
+  console.log('[evd] %d to fetch%s', lessons.length,
+              sections.length ? ' across ' + sections.length + ' sections' : '');
 
   // Load each lesson out of sight and read the player address from it. A
   // lesson page is heavy, so they are fetched a few at a time rather than one
@@ -93,7 +122,8 @@
   const workers = Array.from({ length: Math.min(AT_ONCE, queue.length) }, async () => {
     while (queue.length) {
       const l = queue.shift();
-      const url = await readLesson(l.href);
+      // a single page already has its video; everything else is fetched
+      const url = l.url || await readLesson(l.href);
       window.evdProgress.done++;
       console.log('[evd] %s/%s  %s %s %s', window.evdProgress.done, lessons.length,
                   l.number, l.title.slice(0, 40), url ? 'ok' : 'MISSED');
