@@ -23,10 +23,16 @@
  *   4. wait a few seconds a lesson, then Copy and Paste into the downloader
  *
  * On a big library - a hundred tutorials or more - expect several minutes.
- * Lessons are fetched three at a time, which is enough to slow the site down,
- * so some will time out; anything that does is tried again at the end with
- * the browser to itself, which is usually all it needed. Only what is still
- * missing after that second pass is reported as missed.
+ * Pages are fetched two or three at a time with a pause between, because
+ * asking for a hundred back to back gets the run throttled part way through:
+ * the start and the end come back fine and the middle comes back empty.
+ * Anything that still does not answer is tried again at the end, slower, and
+ * whatever is left after that is listed in the panel with a button to try
+ * those few again - which beats fetching all hundred a second time.
+ *
+ * The panel says why each one was left out. "did not finish loading" is worth
+ * another try; "no player on the page" is a written post with no video on it,
+ * and will say the same next time.
  *
  * Scroll to the bottom of the page first. Only the tutorials the page has
  * actually drawn are collected, and these sites add more as you scroll.
@@ -191,6 +197,12 @@
   // up, and a tab that cannot keep up is what produces a page of MISSED.
   const AT_ONCE = lessons.length > 60 ? 2 : 3;
   const STAGGER = 700;          // ms between starting one frame and the next
+  // A pause between one page and the next. A library fetched back to back
+  // gets throttled part way through - the run comes back with the start and
+  // the end intact and the middle empty, a success every fifth or sixth - and
+  // the cure for that is to ask less often, not to wait longer for an answer
+  // that was never coming.
+  const BREATH = 400;
 
   const readLesson = (href, patience) => new Promise(resolve => {
     const frame = document.createElement('iframe');
@@ -237,116 +249,157 @@
     }, POLL);
   });
 
-  const found = [];
-  window.evdProgress = { done: 0, of: lessons.length };
-  const queue = lessons.slice();
+  // One pass over a list of lessons, `atOnce` at a time, filling in whatever
+  // it can. Used for the first sweep and for every retry after it, so a
+  // second attempt behaves exactly like the first, only more patiently.
   const wait = ms => new Promise(res => setTimeout(res, ms));
-  const workers = Array.from({ length: Math.min(AT_ONCE, queue.length) }, async (_x, n) => {
-    await wait(n * STAGGER);     // do not boot them all in the same instant
-    while (queue.length) {
-      const l = queue.shift();
-      // a single page already has its video; everything else is fetched
-      const got = l.url ? { url: l.url, files: l.files || [] } : await readLesson(l.href);
-      window.evdProgress.done++;
-      console.log('[evd] %s/%s  %s %s %s%s', window.evdProgress.done, lessons.length,
-                  l.number, l.title.slice(0, 40),
-                  got.url ? 'ok' : 'MISSED - ' + got.why,
-                  got.files.length ? ' +' + got.files.length + ' file(s)' : '');
-      found.push(Object.assign({}, l, got));
-    }
-  });
-  await Promise.all(workers);
 
-  // Second pass. Whatever timed out gets another go with the browser to
-  // itself and twice the patience, which is usually all those pages needed.
-  // Only what looked like a timeout is worth another go. A post that
-  // loaded and simply has no video on it - a written tutorial, a gallery -
-  // will be no different the second time.
-  const retry = found.filter(f => !f.url && f.href && f.why !== 'no player on the page');
-  if (retry.length) {
-    console.log('[evd] %d timed out - trying those again, two at a time', retry.length);
-    const again = retry.slice();
-    await Promise.all(Array.from({ length: Math.min(2, again.length) }, async () => {
-      while (again.length) {
-        const l = again.shift();
-        const got = await readLesson(l.href, PATIENCE * 2);
-        if (got.url) {
-          l.url = got.url;
-          if (!l.files || !l.files.length) l.files = got.files;
-        } else {
-          l.why = got.why;
+  const sweep = async (list, atOnce, patience, tag) => {
+    const queue = list.slice();
+    let done = 0;
+    await Promise.all(Array.from({ length: Math.min(atOnce, queue.length) },
+      async (_unused, n) => {
+        await wait(n * STAGGER);       // do not boot them all in one instant
+        while (queue.length) {
+          const l = queue.shift();
+          const got = l.url ? { url: l.url, files: l.files || [] }
+                            : await readLesson(l.href, patience);
+          done++;
+          if (got.url) {
+            l.url = got.url;
+            if (!l.files || !l.files.length) l.files = got.files;
+            l.why = '';
+          } else {
+            l.why = got.why;
+          }
+          console.log('[evd] %s %s/%s  %s %s %s%s', tag, done, list.length, l.number,
+                      l.title.slice(0, 40), got.url ? 'ok' : 'MISSED - ' + got.why,
+                      (got.files || []).length ? ' +' + got.files.length + ' file(s)' : '');
+          // A beat between pages. A library of a hundred fetched back to back
+          // gets throttled part way through - the middle of the run comes back
+          // empty while the start and the end are fine - and the cure is to
+          // ask less often, not to wait longer for an answer that is not coming.
+          if (queue.length) await wait(BREATH);
         }
-        console.log('[evd] retry  %s %s %s', l.number, l.title.slice(0, 40),
-                    got.url ? 'ok' : 'STILL MISSED - ' + got.why);
-      }
-    }));
-  }
-  found.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
+      }));
+  };
 
-  // Anything the course page itself offers, read last so that whatever the
-  // lessons already claimed is not counted twice. A course-wide workbook
-  // lives here rather than on any one lesson.
-  const courseFiles = filesIn(document);
+  // a page that loaded and has no player on it will be no different next time
+  const stragglers = () => lessons.filter(
+    l => !l.url && l.href && l.why !== 'no player on the page');
 
-  const lines = [];
-  let fileCount = 0;
-  for (const r of courseFiles) {
-    lines.push(r.url + ' | 00_' + r.name + '.' + r.ext);
-    fileCount++;
+  await sweep(lessons, AT_ONCE, PATIENCE, 'pass 1');
+  if (stragglers().length) {
+    console.log('[evd] %d did not answer - going round again, slower',
+                stragglers().length);
+    await sweep(stragglers(), 2, PATIENCE * 2, 'pass 2');
   }
-  for (const f of found) {
-    const stem = f.number + '_' + camel(f.title);
-    if (f.url) lines.push(f.url + ' | ' + stem);
-    for (const r of (f.files || [])) {
-      // a handout keeps its lesson's number, so it sorts beside the video
-      lines.push(r.url + ' | ' + stem + '_' + r.name + '.' + r.ext);
-      fileCount++;
-    }
-  }
-  // Say why, not just which. A post with no video on it is nothing to chase;
-  // a page that would not load is worth another run.
-  const gone = found.filter(f => !f.url);
-  const byReason = {};
-  for (const f of gone) (byReason[f.why || 'no video found'] ||= []).push(f.number);
-  const missed = Object.entries(byReason)
-    .map(([why, nums]) => nums.join(', ') + ' (' + why + ')').join('; ');
 
-  document.getElementById('evd-box')?.remove();
-  const wrap = document.createElement('div');
-  wrap.id = 'evd-box';
-  wrap.style.cssText = 'position:fixed;inset:5% 8%;z-index:2147483647;background:#0e1020;'
+  // -- the panel -----------------------------------------------------------
+  // Built as a function so a retry can redraw it rather than starting over:
+  // fetching a hundred pages again to recover the few that were throttled is
+  // most of an hour for no reason.
+  const panel = document.createElement('div');
+  panel.id = 'evd-box';
+  panel.style.cssText = 'position:fixed;inset:5% 8%;z-index:2147483647;background:#0e1020;'
     + 'color:#e8ecff;border:2px solid #6c7cff;border-radius:14px;padding:16px;'
     + 'font:13px system-ui;display:flex;flex-direction:column;gap:10px;'
     + 'box-shadow:0 20px 60px rgba(0,0,0,.6)';
-  wrap.innerHTML = '<div style="font-size:16px;font-weight:600">'
-    + (lines.length - fileCount) + ' of ' + lessons.length + ' lesson links'
-    + (fileCount ? ' and ' + fileCount + ' resource' + (fileCount === 1 ? '' : 's') : '')
-    + '</div>'
-    + '<div style="opacity:.8">Copy, then press Paste in Easy-dlp.'
-    + (missed ? ' <b style="color:#ffb4b4">Not collected: ' + missed + '</b>'
-              : '')
-    + '</div>';
 
+  const heading = document.createElement('div');
   const box = document.createElement('textarea');
-  box.value = lines.join('\n');
   box.style.cssText = 'flex:1;width:100%;background:#05060f;color:#9fe8b0;'
     + 'border:1px solid #2a2f52;border-radius:8px;padding:10px;'
     + 'font:11px ui-monospace,Consolas,monospace;white-space:pre;overflow:auto';
 
-  const copy = document.createElement('button');
-  copy.textContent = 'Copy to clipboard';
-  copy.style.cssText = 'align-self:flex-start;background:#6c7cff;color:#fff;border:0;'
-    + 'border-radius:8px;padding:9px 16px;font:600 13px system-ui;cursor:pointer';
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;align-items:center';
+  const button = (text, primary) => {
+    const b = document.createElement('button');
+    b.textContent = text;
+    b.style.cssText = 'border:0;border-radius:8px;padding:9px 16px;cursor:pointer;'
+      + 'font:600 13px system-ui;'
+      + (primary ? 'background:#6c7cff;color:#fff' : 'background:#232848;color:#cdd4ff');
+    return b;
+  };
+  const copy = button('Copy to clipboard', true);
+  const again = button('', false);
   copy.onclick = () => {
-    box.focus(); box.select(); document.execCommand('copy'); copy.textContent = 'Copied';
+    box.focus(); box.select(); document.execCommand('copy');
+    copy.textContent = 'Copied';
   };
 
-  const close = document.createElement('button');
-  close.textContent = 'Close';
-  close.style.cssText = 'position:absolute;top:10px;right:12px;background:transparent;'
-    + 'color:#8b93c7;border:0;font:13px system-ui;cursor:pointer';
-  close.onclick = () => wrap.remove();
+  const close = button('Close', false);
+  close.style.cssText += ';position:absolute;top:10px;right:12px;background:transparent;'
+    + 'color:#8b93c7;padding:4px;font-weight:400';
+  close.onclick = () => panel.remove();
 
-  wrap.append(box, copy, close);
-  document.body.appendChild(wrap);
+  const render = () => {
+    const ordered = lessons.slice().sort(
+      (a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
+    // Anything the course page itself offers, read after the lessons so that
+    // whatever they already claimed is not counted twice. A course-wide
+    // workbook lives here rather than on any one lesson.
+    const lines = [];
+    let fileCount = 0;
+    for (const r of filesIn(document)) {
+      lines.push(r.url + ' | 00_' + r.name + '.' + r.ext);
+      fileCount++;
+    }
+    for (const f of ordered) {
+      const stem = f.number + '_' + camel(f.title);
+      if (f.url) lines.push(f.url + ' | ' + stem);
+      for (const r of (f.files || [])) {
+        // a handout keeps its lesson's number, so it sorts beside the video
+        lines.push(r.url + ' | ' + stem + '_' + r.name + '.' + r.ext);
+        fileCount++;
+      }
+    }
+    box.value = lines.join(String.fromCharCode(10));
+    copy.textContent = 'Copy to clipboard';
+
+    // Say why, not only which: a post with no video on it is nothing to
+    // chase, a page that would not load is worth another go.
+    const gone = ordered.filter(f => !f.url);
+    const byReason = {};
+    for (const f of gone) {
+      const why = f.why || 'no video found';
+      (byReason[why] = byReason[why] || []).push(f.number);
+    }
+    const missed = Object.keys(byReason)
+      .map(why => byReason[why].join(', ') + ' (' + why + ')').join('; ');
+
+    heading.innerHTML = '<div style="font-size:16px;font-weight:600">'
+      + (lines.length - fileCount) + ' of ' + lessons.length + ' lesson links'
+      + (fileCount ? ' and ' + fileCount + ' resource' + (fileCount === 1 ? '' : 's') : '')
+      + '</div>'
+      + '<div style="opacity:.8">Copy, then press Paste in Easy-dlp.'
+      + (missed ? ' <b style="color:#ffb4b4">Not collected: ' + missed + '</b>' : '')
+      + '</div>';
+
+    const left = stragglers().length;
+    again.style.display = left ? '' : 'none';
+    again.disabled = false;
+    again.textContent = 'Try the ' + left + ' missing again';
+  };
+
+  again.onclick = async () => {
+    const list = stragglers();
+    again.disabled = true;
+    for (let i = 0; i < list.length; i++) {
+      again.textContent = 'Trying ' + (i + 1) + ' of ' + list.length + '…';
+      // one at a time, with the browser to itself and every patience going -
+      // this is the pass that gets back what a rate limit took
+      await sweep([list[i]], 1, PATIENCE * 3, 'again');
+      await wait(BREATH);
+    }
+    render();
+  };
+  window.evdRetryMissed = () => again.onclick();
+
+  document.getElementById('evd-box')?.remove();
+  row.append(copy, again);
+  panel.append(heading, box, row, close);
+  document.body.appendChild(panel);
+  render();
 })();

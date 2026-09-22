@@ -42,10 +42,18 @@ rather than from history.
   came back empty were simply the ones that loaded while the browser was
   busiest.
 
-  Now two at a time above sixty lessons, started a beat apart, in smaller
-  frames, polled three times a second so a slot is handed back the moment a
-  page is ready. Anything that still times out gets a second pass at the end
-  with the browser to itself and twice the patience.
+  A run of 125 came back with 79 collected and 46 missed, and the shape of it
+  named the cause: the first 35 all fine, the last 30 all fine, and the middle
+  60 lost bar a success every fifth or sixth. That is a site throttling a
+  client asking for a hundred pages back to back, not a hundred broken pages.
+
+  So the run asks less often rather than waiting longer: two at a time above
+  sixty lessons, started a beat apart, a pause between one page and the next,
+  in smaller frames, polled three times a second so a slot is handed back the
+  moment a page is ready. Anything that still does not answer gets a second
+  pass at the end, slower, and the panel then offers a button to try whatever
+  is left one at a time - recovering a few stragglers without fetching the
+  whole library again.
 
   A lesson that comes back empty now says why - the page never finished
   loading, or it loaded and has no player on it - and only the first kind is
