@@ -32,6 +32,26 @@ rather than from history.
   Besides a course numbered into sections, it now reads a library of tutorial
   posts and a single tutorial page with the video on it.
 
+### Fixed
+
+- **The Vimeo collector lost lessons on a big library.** On a page of a
+  hundred tutorials or more it reported a screenful of MISSED, and could lock
+  the tab up outright. Each hidden frame is a whole copy of the site's app
+  running in the same renderer as the page you are watching, so three at a
+  time is fine for a course and far too many for a library: the ones that
+  came back empty were simply the ones that loaded while the browser was
+  busiest.
+
+  Now two at a time above sixty lessons, started a beat apart, in smaller
+  frames, polled three times a second so a slot is handed back the moment a
+  page is ready. Anything that still times out gets a second pass at the end
+  with the browser to itself and twice the patience.
+
+  A lesson that comes back empty now says why - the page never finished
+  loading, or it loaded and has no player on it - and only the first kind is
+  retried. Any player is taken, not only Vimeo: a library built over years
+  collects the odd YouTube or Wistia embed, and yt-dlp handles those too.
+
 ### Changed
 
 - **Start Download moved to the foot of the options.** It used to sit above
