@@ -219,8 +219,7 @@ class App:
         self.left_cv.configure(width=lw, height=lh)
 
         add_h = self._add_card_height()
-        # the switch grid grew a row when handouts were added to it
-        options_h = 352 + (152 if self.advanced else 0)
+        options_h = self._options_card_height()
         add_box = (pad, HEADER_H, pad + left_w, HEADER_H + add_h)
         opt_box = (pad, HEADER_H + add_h + gap,
                    pad + left_w, HEADER_H + add_h + gap + options_h)
@@ -341,7 +340,7 @@ class App:
 
     def _add_card_height(self) -> int:
         rows = max(1, len(self.stage_data))
-        return self.STAGE_TOP + rows * self.STAGE_ROW_H + 2 + 28 + 8 + 36 + 14
+        return self.STAGE_TOP + rows * self.STAGE_ROW_H + 2 + 28 + 14
 
     def _draw_add_card(self, win_box):
         cv = self.left_cv
@@ -380,32 +379,23 @@ class App:
             self.stage_rows.append({"name": f_name, "url": f_url})
             ry += self.STAGE_ROW_H
 
+        # Start Download is not here but at the foot of the options card, so
+        # that the folder the files land in is read past on the way to it.
         by = ry + 2
-        bw = (inner - 16) // 3
-        b_paste = WG.Button(cv, x, by, bw, 28, text="Paste", icon="clipboard",
-                            variant="subtle", font=T.f("small"),
-                            command=self.paste_clipboard,
-                            tooltip="Fill rows from the clipboard")
-        b_import = WG.Button(cv, x + bw + 8, by, bw, 28, text="Import", icon="folder",
-                             variant="subtle", font=T.f("small"), command=self.import_file,
-                             tooltip="Fill rows from a .txt file of links")
-        b_clear = WG.Button(cv, x + (bw + 8) * 2, by, inner - (bw + 8) * 2, 28,
-                            text="Clear", icon="x", variant="subtle", font=T.f("small"),
-                            command=self.clear_stage, tooltip="Empty the staging list")
+        bw = (inner - 24) // 4
+        for i, (text, icon, tip, cmd) in enumerate([
+            ("Add", "plus", "Add another row", self.add_stage_row),
+            ("Paste", "clipboard", "Fill rows from the clipboard", self.paste_clipboard),
+            ("Import", "folder", "Fill rows from a .txt file of links", self.import_file),
+            ("Clear", "x", "Empty the staging list", self.clear_stage),
+        ]):
+            bx = x + (bw + 8) * i
+            w = bw if i < 3 else inner - (bw + 8) * 3
+            self._add_left(WG.Button(cv, bx, by, w, 28, text=text, icon=icon,
+                                     variant="subtle", font=T.f("small"),
+                                     command=cmd, tooltip=tip))
 
-        by2 = by + 36
-        add_w = 104
-        b_add = WG.Button(cv, x, by2, add_w, 36, text="Add", icon="plus",
-                          variant="subtle", command=self.add_stage_row,
-                          tooltip="Add another row")
-        self.b_start_dl = WG.Button(cv, x + add_w + 8, by2, inner - add_w - 8, 36,
-                                    text="Start Download", icon="download",
-                                    variant="primary", command=self.start_download,
-                                    tooltip="Queue every staged row and begin")
-        for wdg in (b_paste, b_import, b_clear, b_add, self.b_start_dl):
-            self._add_left(wdg)
-
-        self._stage_bottom = by2 + 36
+        self._stage_bottom = by + 28
         if self._focus_row is not None and 0 <= self._focus_row < len(self.stage_rows):
             self.stage_rows[self._focus_row]["url"].entry.focus_set()
         self._focus_row = None
@@ -496,6 +486,37 @@ class App:
         self.rebuild()
 
     # -- options card --------------------------------------------------
+    SWITCHES = [
+        ("Subtitles", "subtitles", "Download and embed subtitles"),
+        ("Thumbnail", "thumbnail", "Embed the cover image"),
+        ("Metadata", "metadata", "Embed title, artist and chapters"),
+        ("SponsorBlock", "sponsorblock", "Cut sponsor segments out"),
+        ("Playlists", "playlists", "Follow playlist links instead of a single video"),
+        ("Skip existing", "archive", "Keep an archive file and skip repeats"),
+        ("Resources", "resources",
+         "Stage the handouts a course page offers - worksheets, brush sets, "
+         "project files - alongside its videos"),
+    ]
+
+    @classmethod
+    def _switch_rows(cls) -> int:
+        return -(-len(cls.SWITCHES) // 2)          # two to a row, rounded up
+
+    def _options_card_height(self) -> int:
+        """Must agree with what _draw_options_card lays out.
+
+        Written as the same walk down the card, so adding a control to one
+        without the other cannot quietly clip the panel it is drawn on.
+        """
+        y = 34 + 16 + 44 + 16 + 44 + 16 + 46       # down to the switch grid
+        y += self._switch_rows() * 30 + 6          # ... and past it
+        if self.advanced:
+            y += 36 + 16 + 42 + 16 + 42 + 16 + 30  # the advanced fields
+            y += 14                                # before the button
+        else:
+            y += 26 + 12                           # the Advanced options button
+        return y + 40 + 14                         # Start Download, then padding
+
     def _draw_options_card(self, win_box):
         cv = self.left_cv
         x0, y0, x1, y1 = self._local(win_box)
@@ -549,18 +570,7 @@ class App:
 
         y += 46
         col_w = (inner - 16) // 2
-        switches = [
-            ("Subtitles", "subtitles", "Download and embed subtitles"),
-            ("Thumbnail", "thumbnail", "Embed the cover image"),
-            ("Metadata", "metadata", "Embed title, artist and chapters"),
-            ("SponsorBlock", "sponsorblock", "Cut sponsor segments out"),
-            ("Playlists", "playlists", "Follow playlist links instead of a single video"),
-            ("Skip existing", "archive", "Keep an archive file and skip repeats"),
-            ("Resources", "resources",
-             "Stage the handouts a course page offers - worksheets, brush sets, "
-             "project files - alongside its videos"),
-        ]
-        for i, (text, key, tip) in enumerate(switches):
+        for i, (text, key, tip) in enumerate(self.SWITCHES):
             sx = x + (col_w + 16) * (i % 2)
             sw_w = col_w if i % 2 == 0 else inner - col_w - 16
             switch = WG.Switch(cv, sx, y + (i // 2) * 30, sw_w, text,
@@ -568,7 +578,7 @@ class App:
                                command=lambda v, k=key: self.set_opt(k, v))
             self._add_left(switch)
 
-        y += -(-len(switches) // 2) * 30 + 6
+        y += self._switch_rows() * 30 + 6
         self.b_advanced = WG.Button(
             cv, x, y, inner, 26,
             text="Advanced options" + ("  ▴" if self.advanced else "  ▾"),
@@ -576,6 +586,7 @@ class App:
         self._add_left(self.b_advanced)
 
         if not self.advanced:
+            self._draw_start_button(x, y + 26 + 12, inner)
             return
 
         y += 36
@@ -610,6 +621,22 @@ class App:
                                    bg=self._well_bg(win_box, y, inner, 30),
                                    on_change=lambda v: self.set_opt("template", v))
         self._add_left(self.f_template)
+
+        self._draw_start_button(x, y + 30 + 14, inner)
+
+    def _draw_start_button(self, x: int, y: int, w: int):
+        """The last thing in the column, on purpose.
+
+        It used to sit above the options, which put the folder the files land
+        in past the button - easy to press Start before remembering to point
+        it somewhere new. Now everything that decides where a download goes is
+        read on the way down to it.
+        """
+        self.b_start_dl = WG.Button(self.left_cv, x, y, w, 40,
+                                    text="Start Download", icon="download",
+                                    variant="primary", command=self.start_download,
+                                    tooltip="Queue every staged row and begin")
+        self._add_left(self.b_start_dl)
 
     def _add_left(self, wdg: WG.W):
         self.widgets.append(wdg)

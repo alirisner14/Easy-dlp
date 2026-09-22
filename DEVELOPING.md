@@ -32,6 +32,7 @@ failed. Run them from the project root.
 | `parallel_test.py` | the parallel limit, including rows paused mid-launch |
 | `resume_test.py` | a restart keeps part-finished downloads |
 | `pagescan_test.py` | a course page yields every lesson, named and numbered |
+| `layout_test.py` | the left column's cards are as tall as what is drawn on them, so nothing is clipped |
 | `resources_test.py` | handouts are found without dragging in the site's logo, and fetched as files rather than run through the video machinery |
 
 The tests that build a real window read and write the same `settings.json` and
@@ -43,8 +44,9 @@ set APPDATA=C:\Temp\evd-sandbox
 python resume_test.py
 ```
 
-`parallel_test.py` and `resume_test.py` replace `subprocess.Popen`, so they
-never download anything.
+`layout_test.py` points `APPDATA` at a scratch folder itself, so it is safe to
+run as it is. `parallel_test.py` and `resume_test.py` replace
+`subprocess.Popen`, so they never download anything.
 
 ## Where the app keeps things
 

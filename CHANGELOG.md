@@ -32,6 +32,19 @@ rather than from history.
   Besides a course numbered into sections, it now reads a library of tutorial
   posts and a single tutorial page with the video on it.
 
+### Changed
+
+- **Start Download moved to the foot of the options.** It used to sit above
+  them, which put the folder the files land in past the button - easy to press
+  Start before remembering to point it somewhere new. Everything that decides
+  where a download goes is now read on the way down to it. **Add** joined
+  Paste, Import and Clear on the row above.
+
+  The options card's height was a number kept in step with its contents by
+  hand, and was already 16px short of what it drew. It is now worked out from
+  the same walk down the card, and `layout_test.py` builds the real window and
+  checks the two agree.
+
 ## 1.0.0 - 2026-09-19
 
 First version kept under version control.

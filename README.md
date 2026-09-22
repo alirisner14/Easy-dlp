@@ -67,8 +67,11 @@ instead of keeping a browser, a text file and a downloader open side by side.
    list.
 5. Paste a whole **course page** instead and it stages the entire course at
    once — see below.
-6. **Start Download** queues every row that has a URL and starts working through
-   them. The staging list then resets, ready for the next batch.
+6. **Start Download**, at the foot of the options below, queues every row that
+   has a URL and starts working through them. The staging list then resets,
+   ready for the next batch. It sits last on purpose: everything that decides
+   where a download goes — the folder above all — is read on the way down to
+   it, rather than being scrolled past after the fact.
 
 ### Staging a whole course from its page
 
