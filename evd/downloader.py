@@ -19,7 +19,7 @@ from collections import deque
 from dataclasses import dataclass, field
 
 from .config import config_dir
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 SEP = "|EVD|"
 CREATE_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
@@ -850,6 +850,19 @@ class Engine:
         # is the way to ask for that.
         args.append("--force-overwrites" if job.force else "--no-overwrites")
 
+        ext = resource_ext(job.url, job.name)
+        if ext:
+            # A worksheet is not a video. Picking a resolution, merging into a
+            # container and embedding tags either do nothing here or corrupt
+            # the file, so the link is simply fetched under the name it was
+            # staged with.
+            args += ["-f", "b", "-o", resource_template(job.name, ext, job.url),
+                     "--no-playlist"]
+            rate = (o.get("rate_limit") or "").strip()
+            if rate:
+                args += ["-r", rate]
+            return args + self._auth_args(o) + [job.url]
+
         template = o.get("template") or "%(title)s [%(id)s].%(ext)s"
         if job.name:
             template = name_template(job.name, numbered=bool(
@@ -894,6 +907,12 @@ class Engine:
         rate = (o.get("rate_limit") or "").strip()
         if rate:
             args += ["-r", rate]
+        return args + self._auth_args(o) + [job.url]
+
+    @staticmethod
+    def _auth_args(o: dict) -> list[str]:
+        """What it takes to be let in - the same for a video and a handout."""
+        args = []
         # A cookies file beats reading the browser: recent Chrome encrypts its
         # cookie store so nothing else can open it, and a membership site then
         # just redirects to the login page.
@@ -907,16 +926,42 @@ class Engine:
         # Sites behind Cloudflare refuse a plain request with a 403. This only
         # applies to pages handled by the generic extractor, so it changes
         # nothing for a direct media link.
-        args += ["--extractor-args", "generic:impersonate"]
-
-        args.append(job.url)
-        return args
+        return args + ["--extractor-args", "generic:impersonate"]
 
 
 # ------------------------------------------------------------------ naming --
 _ILLEGAL = '<>:"|?*'
 _MEDIA_EXT = ("mp4", "mkv", "webm", "mov", "avi", "m4v", "flv",
               "mp3", "m4a", "opus", "flac", "wav", "aac", "ogg")
+
+# The handouts that sit beside a lesson: worksheets, brush sets, reference
+# images, project files. Only a known extension counts as one, so a link to
+# another page of the course never turns into a download.
+RESOURCE_EXT = (
+    "pdf", "zip", "rar", "7z", "gz", "tar",
+    "psd", "psb", "ai", "eps", "clip", "procreate", "brushset", "brush",
+    "abr", "tpl", "atn", "blend", "obj", "fbx",
+    "png", "jpg", "jpeg", "gif", "webp", "tif", "tiff", "svg",
+    "doc", "docx", "rtf", "txt", "xls", "xlsx", "csv",
+    "ppt", "pptx", "key", "epub", "mobi", "otf", "ttf",
+)
+
+_RESOURCE_URL = re.compile(
+    r"\.(" + "|".join(RESOURCE_EXT) + r")(?:$|[?#])", re.I)
+
+
+def resource_ext(url: str, name: str = "") -> str | None:
+    """The extension when this is course material rather than a video.
+
+    The address is read first - most handouts are a plain link to the file -
+    and the name second, because some sites serve them from an endpoint with
+    no extension at all and only the link's own text says what it is.
+    """
+    for candidate in (url or "", name or ""):
+        match = _RESOURCE_URL.search(candidate.strip())
+        if match:
+            return match.group(1).lower()
+    return None
 
 
 def sanitize_name(name: str) -> str:
@@ -926,6 +971,25 @@ def sanitize_name(name: str) -> str:
     name = "".join(ch for ch in name if ch not in _ILLEGAL and ord(ch) >= 32)
     name = name.strip(" .")
     return name[:150]
+
+
+def resource_template(name: str, ext: str, url: str = "") -> str:
+    """A literal file name for a handout, extension and all.
+
+    yt-dlp has no idea what a worksheet is - it reports the extension as
+    "unknown_video" - so the name is spelled out here rather than left to
+    %(ext)s, and falls back to whatever the link itself is called.
+    """
+    safe = sanitize_name(name or "")
+    if not safe and url:
+        tail = urlsplit(url).path.rsplit("/", 1)[-1]
+        safe = sanitize_name(unquote(tail))
+    if not safe:
+        safe = "Resource"
+    head, _, suffix = safe.rpartition(".")
+    if head and suffix.lower() == ext:
+        safe = head                                # do not end up with .pdf.pdf
+    return safe + "." + ext
 
 
 def name_template(name: str, numbered: bool = False) -> str:

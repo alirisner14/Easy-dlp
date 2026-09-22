@@ -219,7 +219,8 @@ class App:
         self.left_cv.configure(width=lw, height=lh)
 
         add_h = self._add_card_height()
-        options_h = 322 + (152 if self.advanced else 0)
+        # the switch grid grew a row when handouts were added to it
+        options_h = 352 + (152 if self.advanced else 0)
         add_box = (pad, HEADER_H, pad + left_w, HEADER_H + add_h)
         opt_box = (pad, HEADER_H + add_h + gap,
                    pad + left_w, HEADER_H + add_h + gap + options_h)
@@ -548,21 +549,26 @@ class App:
 
         y += 46
         col_w = (inner - 16) // 2
-        for i, (text, key, tip) in enumerate([
+        switches = [
             ("Subtitles", "subtitles", "Download and embed subtitles"),
             ("Thumbnail", "thumbnail", "Embed the cover image"),
             ("Metadata", "metadata", "Embed title, artist and chapters"),
             ("SponsorBlock", "sponsorblock", "Cut sponsor segments out"),
             ("Playlists", "playlists", "Follow playlist links instead of a single video"),
             ("Skip existing", "archive", "Keep an archive file and skip repeats"),
-        ]):
+            ("Resources", "resources",
+             "Stage the handouts a course page offers - worksheets, brush sets, "
+             "project files - alongside its videos"),
+        ]
+        for i, (text, key, tip) in enumerate(switches):
             sx = x + (col_w + 16) * (i % 2)
             sw_w = col_w if i % 2 == 0 else inner - col_w - 16
-            switch = WG.Switch(cv, sx, y + (i // 2) * 30, sw_w, text, bool(s[key]),
-                               tooltip=tip, command=lambda v, k=key: self.set_opt(k, v))
+            switch = WG.Switch(cv, sx, y + (i // 2) * 30, sw_w, text,
+                               bool(s.get(key, True)), tooltip=tip,
+                               command=lambda v, k=key: self.set_opt(k, v))
             self._add_left(switch)
 
-        y += 3 * 30 + 6
+        y += -(-len(switches) // 2) * 30 + 6
         self.b_advanced = WG.Button(
             cv, x, y, inner, 26,
             text="Advanced options" + ("  ▴" if self.advanced else "  ▾"),
@@ -826,12 +832,15 @@ class App:
         """Copy a whole course page in and get the lessons out of it.
 
         Saves gathering every link by hand from the network tab: the page
-        already lists them, named and numbered.
+        already lists them, named and numbered. Any handouts it attaches -
+        worksheets, brush sets, project files - are staged after them, since
+        those are part of the course too.
         """
         lessons = pagescan.lessons_from_page(text)
-        if not lessons:
+        extras = pagescan.resources_from_page(text) if self.settings.get("resources", True) else []
+        if not lessons and not extras:
             return False
-        self._fill_stage(lessons)
+        self._fill_stage(lessons + extras)
         marks = pagescan.sections(name for _u, name in lessons)
         note = ""
         if len(marks) > 1:
@@ -839,6 +848,9 @@ class App:
             # time, so say how to get rid of it while it is on screen
             note = (" in %d sections - Shift-click a row's x to drop one"
                     % len(marks))
+        if extras:
+            note = (" and %d resource%s"
+                    % (len(extras), "" if len(extras) == 1 else "s")) + note
         self.flash_footer("Found %d lesson%s on that page%s"
                           % (len(lessons), "" if len(lessons) == 1 else "s", note))
         return True

@@ -7,9 +7,10 @@
  * cannot be scraped - they have to be caught as each lesson starts.
  *
  * This walks the lesson list, lets each one begin, and reads the signed
- * addresses back out of the browser's own resource timing log. It ends with a
- * panel you can copy from, in the "url | file name" form that Easy Video
- * Downloader's Paste button reads.
+ * addresses back out of the browser's own resource timing log. Any worksheet
+ * or project file a lesson attaches is picked up on the way past. It ends
+ * with a panel you can copy from, in the "url | file name" form that
+ * Easy-dlp's Paste button reads.
  *
  * It expects a lesson list numbered like "3. Sketch Head 6:12", which is the
  * usual shape. If a site lays its lessons out differently, the row pattern
@@ -39,6 +40,48 @@
   const camel = s => (s.match(/[A-Za-z0-9]+/g) || [])
     .map(w => w[0].toUpperCase() + w.slice(1)).join('');
 
+  // -- handouts ------------------------------------------------------------
+  // A link ending .pdf or .zip is the worksheet it looks like. A link ending
+  // .png is as likely to be the site's logo, so an image comes along only
+  // when the page says outright that it is meant to be saved. Lessons here
+  // open in place rather than in their own page, so this is read from the
+  // page after each one loads, and the set keeps a site-wide link - a terms
+  // PDF in the footer, say - from being collected once per lesson.
+  const FILE_EXT = new RegExp(
+    '\\.(pdf|zip|rar|7z|psd|psb|ai|eps|clip|procreate|brushset|brush|abr|atn'
+    + '|tpl|blend|obj|fbx|doc|docx|rtf|xls|xlsx|csv|ppt|pptx|key|epub|mobi'
+    + '|otf|ttf)$', 'i');
+  const IMAGE_EXT = /\.(png|jpe?g|gif|webp|tiff?|svg|txt)$/i;
+  const SAYS = /download|worksheet|handout|attachment|resource|material|template/i;
+  const ONLY = /^\s*(download|get|save)( it| file| now)?\s*$/i;
+  const takenFiles = new Set();
+
+  const filesHere = () => {
+    const out = [];
+    for (const a of document.querySelectorAll('a[href]')) {
+      const url = a.href;
+      if (!/^https?:/i.test(url) || takenFiles.has(url)) continue;
+      const label = ((a.textContent || '') + ' '
+                     + (a.getAttribute('aria-label') || '')).replace(/\s+/g, ' ').trim();
+      const attr = a.getAttribute('download');
+      let ext = (url.split('?')[0].split('#')[0].match(/\.([A-Za-z0-9]{1,10})$/) || [])[1];
+      if (attr) ext = (attr.match(/\.([A-Za-z0-9]{1,10})$/) || [])[1] || ext;
+      if (!ext) continue;
+      const dotted = '.' + ext;
+      if (!(FILE_EXT.test(dotted)
+            || (IMAGE_EXT.test(dotted) && (attr !== null || SAYS.test(label))))) continue;
+      takenFiles.add(url);
+      let name = ONLY.test(label) ? '' : label;
+      if (!name && attr) name = attr.replace(/\.[^.]+$/, '');
+      if (!name) {
+        name = decodeURIComponent(url.split('?')[0].split('#')[0].split('/').pop() || '')
+          .replace(/\.[^.]+$/, '');
+      }
+      out.push({ url: url, name: camel(name) || 'Resource', ext: ext.toLowerCase() });
+    }
+    return out;
+  };
+
   // one clickable row per lesson: "3. Sketch Head 6:12"
   const findRows = () => {
     const rows = new Map();
@@ -66,6 +109,10 @@
   }
   console.log('[evd] %d lessons, this takes about %d seconds', rows.size, rows.size * 8);
 
+  // whatever the class page offers before any lesson is opened - a course
+  // workbook belongs to the class, not to one lesson
+  const classFiles = filesHere();
+
   const found = [];
   for (const r of [...rows.values()]) {
     // clear the log first: a lesson already played earlier would otherwise
@@ -77,12 +124,27 @@
       await new Promise(res => setTimeout(res, 1000));
       url = seen()[0] || null;
     }
-    console.log('[evd] %s. %s %s', r.n, r.title, url ? 'ok' : 'MISSED');
-    found.push({ n: r.n, title: r.title, url });
+    const files = filesHere();      // whatever this lesson added to the page
+    console.log('[evd] %s. %s %s%s', r.n, r.title, url ? 'ok' : 'MISSED',
+                files.length ? ' +' + files.length + ' file(s)' : '');
+    found.push({ n: r.n, title: r.title, url, files });
   }
 
-  const lines = found.filter(f => f.url)
-    .map(f => f.url + ' | ' + String(f.n).padStart(2, '0') + '_' + camel(f.title));
+  const lines = [];
+  let fileCount = 0;
+  for (const f of classFiles) {
+    lines.push(f.url + ' | 00_' + f.name + '.' + f.ext);
+    fileCount++;
+  }
+  for (const f of found) {
+    const stem = String(f.n).padStart(2, '0') + '_' + camel(f.title);
+    if (f.url) lines.push(f.url + ' | ' + stem);
+    for (const r of f.files) {
+      // a handout keeps its lesson's number, so it sorts beside the video
+      lines.push(r.url + ' | ' + stem + '_' + r.name + '.' + r.ext);
+      fileCount++;
+    }
+  }
   const missed = found.filter(f => !f.url).map(f => f.n).join(', ');
 
   document.getElementById('evd-box')?.remove();
@@ -93,9 +155,11 @@
     + 'font:13px system-ui;display:flex;flex-direction:column;gap:10px;'
     + 'box-shadow:0 20px 60px rgba(0,0,0,.6)';
   wrap.innerHTML = '<div style="font-size:16px;font-weight:600">'
-    + lines.length + ' of ' + rows.size + ' lesson links</div>'
+    + (lines.length - fileCount) + ' of ' + rows.size + ' lesson links'
+    + (fileCount ? ' and ' + fileCount + ' resource' + (fileCount === 1 ? '' : 's') : '')
+    + '</div>'
     + '<div style="opacity:.8">Copy, then press Paste in Easy-dlp. '
-    + 'These expire in about six hours.'
+    + 'The video links expire in about six hours.'
     + (missed ? ' <b style="color:#ffb4b4">Missed: ' + missed + '</b> - run it again.' : '')
     + '</div>';
 

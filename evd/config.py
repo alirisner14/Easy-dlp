@@ -50,6 +50,7 @@ DEFAULTS: dict = {
     "playlists": True,
     "archive": False,
     "playlist_folders": True,
+    "resources": True,      # stage a course page's handouts as well
     "advanced_open": False,
     "staged": [],           # [[file name, url], ...] not yet downloaded
     "window": "",

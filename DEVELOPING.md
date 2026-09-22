@@ -32,6 +32,7 @@ failed. Run them from the project root.
 | `parallel_test.py` | the parallel limit, including rows paused mid-launch |
 | `resume_test.py` | a restart keeps part-finished downloads |
 | `pagescan_test.py` | a course page yields every lesson, named and numbered |
+| `resources_test.py` | handouts are found without dragging in the site's logo, and fetched as files rather than run through the video machinery |
 
 The tests that build a real window read and write the same `settings.json` and
 `queue.json` as the installed app. **Point `APPDATA` at a scratch folder before

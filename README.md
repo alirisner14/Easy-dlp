@@ -88,6 +88,28 @@ Stream (`b-cdn.net`) publishes it; it is not a general scraper. On a site that
 hosts video another way nothing is found and the paste falls back to being read
 as a plain list of links — see **Which players work how** below.
 
+### Course resources
+
+A course is rarely only its videos. Worksheets, brush sets, project files and
+reference sheets come with it, and those are staged too: when a page offers a
+handout, it is added after the lessons and downloaded as the file it is.
+
+The rule is deliberately narrow, so a paste does not drag in every image on
+the page. A link ending `.pdf`, `.zip`, `.psd`, `.brushset` and the like is a
+handout by any reading, and comes along. A link ending `.png` or `.jpg` is as
+likely to be the site's logo or somebody's avatar, so an image is only taken
+when the page says outright that it is meant to be saved — a `download`
+attribute, or wording that says so.
+
+The two collector scripts do the same while they walk a course, and there they
+can do better: a handout keeps the number of the lesson it belongs to, so
+`2.05_ColourTheory_Worksheet.pdf` sorts beside `2.05_ColourTheory.mp4`.
+Anything the course page itself offers, rather than one lesson, is numbered
+`00_`.
+
+Turn it off with the **Resources** switch under Download options if you only
+want the videos.
+
 Rows without a URL are ignored, and anything that is not an http(s) link is
 skipped with a note rather than queued.
 
@@ -330,7 +352,13 @@ Switches: **Subtitles** (download and embed, languages configurable),
 **SponsorBlock** (cut sponsor/self-promo/interaction segments),
 **Playlists** (follow a playlist link instead of grabbing one video),
 **Skip existing** (keeps `.evd-archive.txt` in the download folder and skips
-anything already in it).
+anything already in it), **Resources** (stage the handouts a course page
+offers alongside its videos).
+
+A handout skips the video machinery entirely: no format picking, no container
+merge, no tag embedding — those would either do nothing to a PDF or corrupt
+it. It is fetched under the name it was staged with, extension and all. The
+speed limit still applies, since it is the same connection.
 
 Under **Advanced options**: speed limit (e.g. `4M`), cookies from an installed
 browser (for private or age-gated content), subtitle languages, and the

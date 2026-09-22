@@ -8,6 +8,30 @@ fixed. The version lives in `evd/__init__.py`.
 Anything before 1.0.0 predates this repository, so it is recorded from memory
 rather than from history.
 
+## 1.1.0 - 2026-09-22
+
+### Added
+
+- **Course handouts are collected with the videos.** A course is rarely only
+  its videos: worksheets, brush sets, project files and reference sheets come
+  with it, and gathering those by hand was the same tedium the page scanner
+  was written to end. A pasted page now stages them after the lessons, and the
+  two collector scripts pick them up as they walk a course - there a handout
+  keeps the number of the lesson it belongs to, so it sorts beside the video.
+
+  The rule is deliberately narrow. A link ending `.pdf` or `.zip` is a handout
+  by any reading; a link ending `.png` is as likely to be the site's logo or
+  somebody's avatar, so an image is only taken when the page says outright it
+  is meant to be saved. The **Resources** switch turns the whole thing off.
+
+  A handout skips the video machinery - no format picking, no container merge,
+  no tag embedding, all of which would either do nothing to a PDF or corrupt
+  it - and is fetched under the name it was staged with, extension and all.
+
+- **The Vimeo collector handles the other ways a site lays a course out.**
+  Besides a course numbered into sections, it now reads a library of tutorial
+  posts and a single tutorial page with the video on it.
+
 ## 1.0.0 - 2026-09-19
 
 First version kept under version control.
