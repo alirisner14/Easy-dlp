@@ -3,6 +3,7 @@ import os
 import sys
 
 sys.path.insert(0, "C:/EasyVideoDownloader")
+import sandbox                       # noqa: F401  (redirects APPDATA)
 from evd import pagescan, downloader as D
 
 FIX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")

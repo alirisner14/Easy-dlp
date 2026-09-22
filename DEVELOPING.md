@@ -35,18 +35,20 @@ failed. Run them from the project root.
 | `layout_test.py` | the left column's cards are as tall as what is drawn on them, so nothing is clipped |
 | `resources_test.py` | handouts are found without dragging in the site's logo, and fetched as files rather than run through the video machinery |
 
-The tests that build a real window read and write the same `settings.json` and
-`queue.json` as the installed app. **Point `APPDATA` at a scratch folder before
-running those**, or a real queue will be overwritten:
+Every test imports `sandbox` before it imports anything from `evd`, which
+redirects `APPDATA` at a scratch folder. That is not a nicety: `evd.config`
+works out where `settings.json`, `queue.json` and `activity.log` live at
+import time, and a test that skips the guard writes the installed app's real
+queue. A queue overwritten while the app is closed is the record of what was
+still to download.
 
-```
-set APPDATA=C:\Temp\evd-sandbox
-python resume_test.py
-```
+**So keep `import sandbox` directly under the `sys.path.insert`** in any new
+test, above the `evd` imports. It used to be a line in each docstring saying
+to set `APPDATA` first, which protected nothing.
 
-`layout_test.py` points `APPDATA` at a scratch folder itself, so it is safe to
-run as it is. `parallel_test.py` and `resume_test.py` replace
-`subprocess.Popen`, so they never download anything.
+`parallel_test.py` and `resume_test.py` replace `subprocess.Popen`, so they
+never download anything. `layout_test.py` builds the real window, mapped but
+fully transparent, so nothing appears on screen.
 
 ## Where the app keeps things
 

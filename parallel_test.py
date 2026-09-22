@@ -12,6 +12,7 @@ import threading
 import time
 
 sys.path.insert(0, ".")
+import sandbox                       # noqa: F401  (redirects APPDATA)
 from evd import downloader as D
 
 fails = []

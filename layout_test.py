@@ -9,16 +9,10 @@ thing in the options card, so it is exactly what would go missing.
 This builds the real window, transparent and against a scratch APPDATA, and
 checks the two agree in both states of the Advanced section.
 """
-import os
 import sys
-import tempfile
-
-# a window test reads and writes the same settings.json and queue.json as the
-# installed app, so point it somewhere harmless first
-os.environ["APPDATA"] = os.path.join(tempfile.gettempdir(), "evd-layout-sandbox")
-os.makedirs(os.environ["APPDATA"], exist_ok=True)
 
 sys.path.insert(0, sys.argv[1] if len(sys.argv) > 1 else ".")
+import sandbox                       # noqa: F401  (redirects APPDATA)
 from evd import theme as T, ui as U
 
 fails = []

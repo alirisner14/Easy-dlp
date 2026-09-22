@@ -6,7 +6,6 @@ empty because it was never redrawn - while the window still answered, which
 is what made it so hard to spot. Closing had the same shape: one failing step
 skipped the rest, including the queue.
 
-Run with APPDATA pointed at a scratch folder.
 """
 import json
 import os
@@ -14,6 +13,7 @@ import sys
 import traceback
 
 sys.path.insert(0, sys.argv[1] if len(sys.argv) > 1 else ".")
+import sandbox                       # noqa: F401  (redirects APPDATA)
 from evd import config, downloader as D
 from evd.ui import App
 
