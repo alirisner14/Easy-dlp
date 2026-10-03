@@ -146,19 +146,49 @@ This applies to direct download only. If you are going through the Store with
 an MSIX, Microsoft signs it for you and you can skip this section and its cost
 entirely — see Option B.
 
-Unsigned installers get a full-screen SmartScreen block: *"Windows protected
-your PC"*, with "Run anyway" hidden behind **More info**. A meaningful share of
-buyers stop there and ask for a refund.
+Nothing requires you to sign — Windows will run an unsigned exe, and a
+storefront will sell one. What it costs is the first run: a full-screen
+SmartScreen block reading *"Windows protected your PC"*, where "Don't run" is
+the obvious button and "Run anyway" is hidden behind **More info**. Some
+managed environments refuse it outright. For something people have paid for,
+that is a refund generator.
 
-- **OV certificate** — about $200–400/year. Signs immediately, but SmartScreen
-  reputation builds only after enough installs, so early customers still see
-  warnings for weeks.
-- **EV certificate** — about $400–700/year, and since June 2023 the key must
-  live on an HSM or hardware token. Gets SmartScreen reputation straight away.
+**No certificate buys a clean first run.** Signed or not, a new publisher gets
+SmartScreen warnings until reputation accumulates — Microsoft puts that at
+several weeks and hundreds of clean installs. What signing buys is a milder
+warning that names you, and reputation that carries across releases instead of
+resetting with every new build, because it attaches to your identity rather
+than to one file's hash.
 
-Sellers include DigiCert, Sectigo and SSL.com; resellers are cheaper.
-Verification wants proof the business exists, so start it early — it can take
-a week or more.
+| Option | Cost | First run |
+|---|---|---|
+| Store (MSIX) | free | no warning, ever |
+| Azure Artifact Signing | ~$9.99/month | warning until reputation builds |
+| OV certificate | $150–300/year | same |
+| EV certificate | $400+/year | same as OV — no advantage |
+| Unsigned | free | strong block; enterprises may refuse |
+
+**Azure Artifact Signing** (renamed from Trusted Signing) is Microsoft's own
+service and what they recommend for non-Store distribution: about $120 a year,
+no USB token, and it works from GitHub Actions. Eligibility is organisations in
+the USA, Canada, EU and UK, and **individual developers in the USA and Canada
+only**. Organisations additionally need three or more years of verifiable tax
+history — so a company incorporated for this product would be turned down,
+while the same person applying as an individual would not.
+
+**EV is not worth buying.** It used to bypass SmartScreen on first download;
+Microsoft removed that in 2024, and their own guidance now says paying the EV
+premium for SmartScreen reasons is no longer justified. It still carries
+stricter identity checks, which only matters for enterprise procurement.
+
+If you cannot use Artifact Signing, an OV certificate from DigiCert, Sectigo or
+GlobalSign is the fallback. Since June 2023 the private key must live on an HSM
+or hardware token, which the CA supplies. Identity validation takes several
+business days, so start it early.
+
+**If the project stays open source**, [SignPath Foundation](https://signpath.io)
+signs qualifying open-source projects free at OV level. Worth checking before
+you move off MIT, not after.
 
 ```bash
 signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "Easy-dlp-Setup-1.1.0.exe"
@@ -186,9 +216,14 @@ Read **Before you sell it** first.
 
 The whole route is free. No registration fee, and for an MSIX no code-signing
 certificate either: Microsoft strips any signature and re-signs the package
-with its own certificate once it passes certification, which removes both the
-$200–700 a year and the SmartScreen problem. Hosting is Microsoft's, and the
-OS checks for updates every 24 hours.
+with its own certificate once it passes certification. Hosting is Microsoft's,
+and the OS checks for updates every 24 hours.
+
+The bigger difference is not the money. **A Store install never shows a
+SmartScreen warning**, and no amount of certificate buys that anywhere else —
+every self-distributed app, signed or not, warns new users until the publisher
+builds reputation over weeks. If a clean first run on day one matters, the
+Store is the only way to get it.
 
 The one thing to get right is the package format. **MSIX is signed and hosted
 for you; an EXE/MSI listing is not** — that route still requires your own CA
@@ -258,6 +293,6 @@ Store is worth doing, free signing is most of the reason.
 [ ] installed and run on a machine with neither tool present
 [ ] a real download finishes, to a local folder and to a share
 [ ] licence texts included, About box shows versions
-[ ] installer signed, signature verified with signtool verify /pa
+[ ] installer signed (direct download only), verified with signtool verify /pa
 [ ] tag the commit, attach the installer to a GitHub release
 ```
