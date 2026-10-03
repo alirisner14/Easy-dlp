@@ -60,6 +60,18 @@ rather than from history.
   retried. Any player is taken, not only Vimeo: a library built over years
   collects the odd YouTube or Wistia embed, and yt-dlp handles those too.
 
+- **Pasting a web page could stage hundreds of junk rows.** A page the lesson
+  reader does not recognise fell through to the plain link parser, which takes
+  every http address in the markup - stylesheets, scripts, fonts, trackers -
+  and stages a row for each. Each row is two text boxes and a button drawn on
+  the canvas, so a few hundred of them lock the window up long enough to look
+  like a crash, and none of them are videos.
+
+  Markup is now searched for video addresses only: manifests, plain video
+  files, and the player pages of Vimeo, YouTube, Wistia and Cloudflare Stream.
+  A page with none of those says so rather than staging its furniture. Past
+  150 rows from any source, the app asks before drawing them.
+
 ### Changed
 
 - **Start Download moved to the foot of the options.** It used to sit above

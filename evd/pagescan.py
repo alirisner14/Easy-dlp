@@ -263,3 +263,44 @@ def resources_from_page(text: str, base: str = "") -> list[tuple[str, str]]:
             title = url.split("?")[0].rsplit("/", 1)[-1].rsplit(".", 1)[0]
         found.append((url, _clean(title) + "." + ext))
     return found
+
+
+# ------------------------------------------------------------------ markup --
+_MARKUP = re.compile(r"<(?:!doctype|html|head|body|script|div|a\s|link\s|meta\s)", re.I)
+
+# a video address, whatever the site hosts it on: a manifest, a plain file,
+# or a known player's own page
+_MEDIA_URL = re.compile(
+    # the host may itself be the player, so the part before it can be empty
+    r"""https?://[^\s"'<>\\]*?"""
+    r"(?:\.m3u8|\.mpd|\.mp4|\.webm|\.mkv|\.mov"
+    r"|player\.vimeo\.com/video/\d+|youtube\.com/embed/[\w-]+"
+    r"|youtu\.be/[\w-]+|wistia\.(?:net|com)/[\w/]+"
+    r"|cloudflarestream\.com/\w+)"
+    r"""[^\s"'<>\\]*""", re.I)
+
+
+def looks_like_page(text: str) -> bool:
+    """Is this a web page, rather than a list of links someone typed?"""
+    return bool(text) and bool(_MARKUP.search(text[:4000]))
+
+
+def media_from_page(text: str) -> list[tuple[str, str]]:
+    """Video addresses in a page the lesson scanner could not read.
+
+    Pasting such a page used to fall through to the plain-link parser, which
+    takes every http address in the markup - every stylesheet, script, font
+    and tracker - and stages a row for each. Several hundred of those lock
+    the window up while it draws them, and not one of them is a video. So
+    markup is searched for things that actually are video, and nothing else
+    is offered.
+    """
+    found: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    flat = _html.unescape(text.replace("\\/", "/"))
+    for match in _MEDIA_URL.finditer(flat):
+        url = match.group(0).rstrip(".,);]'\"")
+        if url not in seen:
+            seen.add(url)
+            found.append((url, ""))
+    return found

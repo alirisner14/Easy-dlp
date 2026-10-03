@@ -7,7 +7,7 @@ import subprocess
 import time
 import sys
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 from PIL import Image, ImageTk
 
@@ -847,13 +847,52 @@ class App:
         except tk.TclError:
             self.flash_footer("Clipboard is empty")
             return
-        if self._stage_page(data or ""):
+        self._take_links(data or "", "on the clipboard")
+
+    # Every staged row is two text boxes and a button drawn on the canvas, so
+    # a few hundred of them take a long time to lay out and the window looks
+    # hung while it happens. Past this many, say so and ask first.
+    MANY_ROWS = 150
+
+    def _take_links(self, text: str, where: str):
+        """Read pasted or imported text into staged rows, whatever shape it is.
+
+        A course page the scanner knows is read lesson by lesson. A page it
+        does not know is searched for video addresses only - taking every
+        http link in markup means a row each for every stylesheet, script and
+        tracker on the page, which is both useless and slow enough to look
+        like a crash. Anything that is not markup is read as a list of links.
+        """
+        if self._stage_page(text):
             return
-        entries = D.parse_entries(data or "")
-        if not entries:
-            self.flash_footer("No http(s) link on the clipboard")
+        if pagescan.looks_like_page(text):
+            entries = pagescan.media_from_page(text)
+            if not entries:
+                self.flash_footer(
+                    "That looks like a web page, but there are no video links "
+                    "in it - check the collector scripts in tools/")
+                return
+            self.flash_footer("That page is not one the lesson reader knows, so "
+                              "only its video links were taken (%d)" % len(entries))
+        else:
+            entries = D.parse_entries(text)
+            if not entries:
+                self.flash_footer("No http(s) link %s" % where)
+                return
+        if self._too_many(len(entries)):
             return
         self._fill_stage(entries)
+
+    def _too_many(self, count: int) -> bool:
+        """Ask before staging enough rows to make the window crawl."""
+        if count <= self.MANY_ROWS:
+            return False
+        return not messagebox.askokcancel(
+            "That is a lot of links",
+            "%d links were found.\n\nStaging that many takes a while to draw "
+            "and the window will not respond until it finishes.\n\n"
+            "Stage them anyway?" % count,
+            parent=self.root, icon="warning", default="cancel")
 
     def _stage_page(self, text: str) -> bool:
         """Copy a whole course page in and get the lessons out of it.
@@ -897,13 +936,7 @@ class App:
         except OSError as exc:
             self.flash_footer("Could not read that file: %s" % exc)
             return
-        if self._stage_page(text):
-            return
-        entries = D.parse_entries(text)
-        if not entries:
-            self.flash_footer("No links found in that file")
-            return
-        self._fill_stage(entries)
+        self._take_links(text, "in that file")
 
     def browse(self):
         path = filedialog.askdirectory(title="Choose download folder",
