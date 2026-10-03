@@ -38,6 +38,35 @@ def ensure_icon() -> Path:
     return ICON
 
 
+VENDOR = ROOT / "vendor"        # yt-dlp.exe and ffmpeg.exe for a release build
+NEEDED = ("yt-dlp.exe", "ffmpeg.exe")
+
+
+def collect_tools() -> list[str]:
+    """The command line tools a release build carries inside it.
+
+    Someone who downloads the app has no reason to already have yt-dlp and
+    ffmpeg, and "install these two command line programs first" is not a
+    product. Drop them in vendor/ and they travel inside the exe; leave it
+    empty and the build still works, falling back to whatever is on PATH -
+    which is what you want while developing, and not what you want to sell.
+    """
+    if not VENDOR.is_dir():
+        print("vendor/ is empty - this build will need yt-dlp and ffmpeg on "
+              "PATH. See RELEASING.md before shipping it to anyone.")
+        return []
+    args = []
+    for name in NEEDED:
+        path = VENDOR / name
+        if path.is_file():
+            args += ["--add-binary", "%s%s." % (path, os.pathsep)]
+            print("bundling %s (%.1f MB)" % (name, path.stat().st_size / 1048576))
+        else:
+            print("vendor/%s is missing - the build will fall back to PATH "
+                  "for it" % name)
+    return args
+
+
 def main() -> int:
     if shutil.which("pyinstaller") is None:
         try:
@@ -49,6 +78,7 @@ def main() -> int:
 
     icon = ensure_icon()
     work = Path(tempfile.mkdtemp(prefix="evd-build-"))
+    tools = collect_tools()
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--noconfirm", "--clean",
@@ -59,6 +89,7 @@ def main() -> int:
         # the window and taskbar icon are drawn from this at run time, so it
         # has to travel inside the packaged app as well
         "--add-data", "%s%sdocs" % (ROOT / "docs" / "Easy-dlp_Logo.png", os.pathsep),
+        *tools,
         "--distpath", str(ROOT / "dist"),
         "--workpath", str(work / "build"),
         "--specpath", str(work),

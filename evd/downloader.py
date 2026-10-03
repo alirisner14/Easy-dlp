@@ -173,7 +173,33 @@ def is_transient(error: str) -> bool:
     return any(t in text for t in _TRANSIENT)
 
 
+def bundled_tool(name: str) -> str | None:
+    """A tool shipped inside the app, if this build carries one.
+
+    Someone who installs a packaged build has no reason to have yt-dlp or
+    ffmpeg already, and telling them to go and install two command line
+    programs first is not a product. A release build carries both; a build
+    from source does not, and falls back to whatever is on PATH.
+    """
+    roots = []
+    meipass = getattr(sys, "_MEIPASS", "")       # inside a one-file build
+    if meipass:
+        roots.append(meipass)
+    if getattr(sys, "frozen", False):
+        roots.append(os.path.dirname(sys.executable))   # beside the exe
+    for root in roots:
+        for path in (os.path.join(root, name), os.path.join(root, "tools", name)):
+            if os.path.isfile(path):
+                return path
+    return None
+
+
 def find_ytdlp() -> str | None:
+    # what ships with the app wins: a stale copy on PATH should not decide
+    # how a paid-for install behaves
+    exe = bundled_tool("yt-dlp.exe" if os.name == "nt" else "yt-dlp")
+    if exe:
+        return exe
     exe = shutil.which("yt-dlp") or shutil.which("yt-dlp.exe")
     if exe:
         return exe
@@ -187,6 +213,11 @@ def find_ytdlp() -> str | None:
         return sys.executable
     except Exception:
         return None
+
+
+def find_ffmpeg() -> str | None:
+    return (bundled_tool("ffmpeg.exe" if os.name == "nt" else "ffmpeg")
+            or shutil.which("ffmpeg"))
 
 
 def ytdlp_version(exe: str | None) -> str:
@@ -306,7 +337,7 @@ class Engine:
         self.running = False
         self.max_parallel = 2
         self.exe = find_ytdlp()
-        self.ffmpeg = shutil.which("ffmpeg")
+        self.ffmpeg = find_ffmpeg()
         self._procs: dict[str, subprocess.Popen] = {}
         self._lock = threading.RLock()
         self._stop = False

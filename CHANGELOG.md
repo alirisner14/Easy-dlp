@@ -72,6 +72,16 @@ rather than from history.
   A page with none of those says so rather than staging its furniture. Past
   150 rows from any source, the app asks before drawing them.
 
+- **A packaged build can carry yt-dlp and ffmpeg inside it.** It looked for
+  them on `PATH` only, so a packaged app on a machine that had never installed
+  either - which is every machine but a developer's - opened its window and
+  failed every download with "yt-dlp was not found on PATH". Drop the two
+  executables in `vendor/` and the build bundles them; what ships wins over
+  what is installed, so a stale copy on `PATH` cannot change how an install
+  behaves. A build from source still uses `PATH`, which is what you want while
+  developing. `RELEASING.md` covers the rest, including which ffmpeg licence
+  to take.
+
 ### Changed
 
 - **Start Download moved to the foot of the options.** It used to sit above

@@ -48,3 +48,6 @@ file-uploads*
 *.mp4
 *.mkv
 *.webm
+
+# release-only binaries: yt-dlp.exe and ffmpeg.exe, fetched per RELEASING.md
+vendor/
