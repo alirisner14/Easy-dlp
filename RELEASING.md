@@ -65,11 +65,18 @@ predictable from the policy text alone.
 
 That does not make it unpublishable, and your own use — content you have paid
 for, saved locally because a browser player is hard on your eyes — is exactly
-the case the tool is good at. But **do not spend the $19 developer account and
-a week of packaging on the assumption it will pass.** Direct download is the
-lower-risk first release; you can attempt the Store afterwards with nothing
-lost. If you do submit, lead the description with what it is for: your own
-purchased and licensed material, offline and accessible.
+the case the tool is good at. Certification is discretionary, so the only way
+to know is to submit.
+
+**Submit to the Store first.** Not because it is more likely to pass, but
+because finding out is now free: no registration fee, no code-signing
+certificate, no hosting. Direct download is the expensive path — a certificate
+alone is $200–700 a year — so spending that before you know whether the Store
+will have you is the wrong order. A rejection costs days; starting with the
+paid route costs money you may not have needed to spend.
+
+If you do submit, lead the description with what it is for: your own purchased
+and licensed material, offline and accessible.
 
 ### Smaller things worth doing first
 
@@ -135,6 +142,10 @@ is the right default for a tool like this.
 
 ### 2. Sign it, or customers will not install it
 
+This applies to direct download only. If you are going through the Store with
+an MSIX, Microsoft signs it for you and you can skip this section and its cost
+entirely — see Option B.
+
 Unsigned installers get a full-screen SmartScreen block: *"Windows protected
 your PC"*, with "Run anyway" hidden behind **More info**. A meaningful share of
 buyers stop there and ask for a refund.
@@ -173,9 +184,16 @@ Read **Before you sell it** first.
 
 ### What you get
 
-Microsoft signs and hosts the package free, which removes the certificate cost
-and the SmartScreen problem entirely, and the OS updates it every 24 hours.
-That is a real saving over Option A.
+The whole route is free. No registration fee, and for an MSIX no code-signing
+certificate either: Microsoft strips any signature and re-signs the package
+with its own certificate once it passes certification, which removes both the
+$200–700 a year and the SmartScreen problem. Hosting is Microsoft's, and the
+OS checks for updates every 24 hours.
+
+The one thing to get right is the package format. **MSIX is signed and hosted
+for you; an EXE/MSI listing is not** — that route still requires your own CA
+certificate, your own hosting and your own update mechanism, which is every
+cost of Option A with none of its independence.
 
 ### Two routes
 
@@ -187,15 +205,23 @@ it from the Store, point it at your Inno Setup installer, and it records what
 the installer does and produces an `.msix`.
 
 **Listing your EXE/MSI.** Allowed since 2021, but you keep every cost: you host
-the installer, you sign it with your own CA certificate, you handle updates. It
-exists mainly for apps that cannot be packaged. Skip it — if the Store is worth
-doing, MSIX is the reason.
+the installer, you Authenticode-sign it yourself with a CA certificate before
+submission — the Store does not re-sign EXE or MSI files — and you handle
+updates. It exists mainly for apps that cannot be packaged. Skip it: if the
+Store is worth doing, free signing is most of the reason.
 
 ### Steps
 
-1. **Register** at [Partner Center](https://partner.microsoft.com/dashboard) —
-   one-off $19 for an individual, $99 for a company. Identity verification can
-   take days, so start it before anything else.
+1. **Register** — start at <https://storedeveloper.microsoft.com>, and only
+   there. Registration is **free** for both account types through that flow;
+   going in via Partner Center, Visual Studio or Xbox lands you in the legacy
+   flow that still charges $19/$99. Verification is a government ID and a
+   selfie, and can take up to 30 minutes to propagate.
+
+   Choose **Company**, not Individual. Microsoft's split is whether the
+   distribution relates to your business, trade or profession — selling the app
+   does — and Partner Center **cannot convert an Individual account to a
+   Company one.** Getting it wrong means starting over with a new account.
 2. **Reserve the name** "Easy-dlp" in the dashboard. Free, immediate, and it
    stops anyone else taking it.
 3. **Package as MSIX** with the tool above. It needs a clean VM to record in —
