@@ -366,7 +366,8 @@ class App:
                               font=T.f("small"),
                               bg=self._well_bg(win_box, ry, name_w, 30))
             f_url = WG.Field(cv, x + name_w + gap, ry, url_w, 30, value=url,
-                             placeholder="https://\u2026", font=T.f("small"),
+                             placeholder="https://\u2026   add 1:30-5:00 for part",
+                             font=T.f("small"),
                              bg=self._well_bg(win_box, ry, url_w, 30),
                              on_return=lambda _v: self.add_stage_row())
             b_del = WG.IconButton(cv, x + inner - del_w, ry + 4, del_w, "x",
@@ -761,15 +762,36 @@ class App:
         opts = self.snapshot()
         queued: list[tuple[str, str]] = []
         added = skipped = 0
-        for name, url in ready:
-            found = D.parse_entries(url)
+        bad_ranges: list[int] = []
+        keep: list[list[str]] = []      # rows to leave staged for fixing
+        for row, (name, url) in enumerate(ready, 1):
+            # "link 1:30-5:00" asks for that part only. A range that does not
+            # make sense - backwards, or not a time - holds the row back
+            # rather than quietly downloading the whole video instead.
+            link, section = D.split_section(url)
+            if not section and D.looks_like_range(url):
+                bad_ranges.append(row)
+                keep.append([name, url])
+                continue
+            found = D.parse_entries(link)
             if not found:
                 skipped += 1
                 continue
             final_name = name or found[0][1]
-            self.engine.add(found[0][0], opts, name=final_name)
-            queued.append((final_name, found[0][0]))
+            self.engine.add(found[0][0], opts, name=final_name, section=section)
+            # the batch file keeps the range with the link, the way it was
+            # typed, so pasting the batch back in asks for the same clip
+            queued.append((final_name, ("%s %s" % (found[0][0], url[len(link):].strip())).strip()))
             added += 1
+
+        if bad_ranges:
+            self.flash_footer(
+                "Row%s %s: that time range does not work - use start-end, like "
+                "1:30-5:00, with the end after the start"
+                % ("" if len(bad_ranges) == 1 else "s",
+                   ", ".join(str(r) for r in bad_ranges)))
+            if not added:
+                return
 
         if not added:
             self.flash_footer("That does not look like an http(s) link")
@@ -777,7 +799,9 @@ class App:
 
         self._save_batch(queued)
         self._save_queue(force=True)
-        self.stage_data = [["", ""]]
+        # a row held back for a bad range stays staged, so fixing it is one
+        # edit rather than typing the link out again
+        self.stage_data = keep or [["", ""]]
         self.stage_rows = []
         self._save_stage()
         self.engine.start()
@@ -786,7 +810,13 @@ class App:
         self.queue.scroll_to_end()
         self.on_selection_change(self.queue.selected_jobs())
         self.update_stats()
-        if skipped:
+        if bad_ranges:
+            self.flash_footer(
+                "Started %d. Left %s staged - the time range needs to be "
+                "start-end, like 1:30-5:00, with the end after the start"
+                % (added, "row " + str(bad_ranges[0]) if len(bad_ranges) == 1
+                   else "%d rows" % len(bad_ranges)))
+        elif skipped:
             self.flash_footer("Started %d, skipped %d that were not links"
                               % (added, skipped))
 

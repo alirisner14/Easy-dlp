@@ -77,7 +77,18 @@ instead of keeping a browser, a text file and a downloader open side by side.
    list.
 5. Paste a whole **course page** instead and it stages the entire course at
    once — see below.
-6. **Start Download**, at the foot of the options below, queues every row that
+6. **Want only part of a video?** Type the range after the link, in the same
+   box: `https://… 1:30-5:00`. Only that stretch is downloaded — no fetching
+   two hours to keep five minutes. `1:30-` runs to the end, `-5:00` is the
+   first five minutes, and hours work too (`1:02:03-1:05:00`). The file is
+   named for the part it holds, `Lesson (1m30s-5m00s).mp4`, so it never
+   collides with the full video. A pasted list can carry ranges as a third
+   column: `url | name | 1:30-5:00`.
+
+   The cut lands on the nearest keyframe at or before the start, so a clip
+   may begin a second or two early — never late. A backwards or garbled range
+   holds that row back in the list rather than downloading the whole video.
+7. **Start Download**, at the foot of the options below, queues every row that
    has a URL and starts working through them. The staging list then resets,
    ready for the next batch. It sits last on purpose: everything that decides
    where a download goes — the folder above all — is read on the way down to

@@ -15,6 +15,20 @@ will.
 
 ## Unreleased
 
+### Added
+
+- **Download part of a video.** Type a range after the link -
+  `https://... 1:30-5:00` - and only that stretch is fetched, rather than the
+  whole recording followed by a trim in another program. Either end may be
+  left off, hours work, and a pasted list can carry a range as a third
+  column. The file is named for the part it holds, so a clip never collides
+  with the full video, and the range survives a restart.
+
+  A range that makes no sense - backwards, or not a time - holds the row back
+  in the list with a note, rather than being ignored. Ignoring it would mean
+  silently downloading the whole two-hour video, which is the one outcome the
+  feature exists to prevent.
+
 ### Changed
 
 - **Handouts are read from the part of a page meant for them.** Extension

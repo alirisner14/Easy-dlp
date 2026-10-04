@@ -315,10 +315,14 @@ class Job:
     force: bool = False        # a manual retry may replace that file
     gentle: bool = False       # retry politely after a refused request
     name: str = ""            # per-video output name, no extension
+    section: str = ""         # "90-300": only that part of the video, in seconds
 
     @property
     def label(self) -> str:
-        return self.title or self.name or self.url
+        base = self.title or self.name or self.url
+        # a clip says which part it is, so it is not mistaken in the queue
+        # for the whole video
+        return "%s (%s)" % (base, section_label(self.section)) if self.section else base
 
     @property
     def is_playlist(self) -> bool:
@@ -347,8 +351,10 @@ class Engine:
         self._thread.start()
 
     # -- queue management ----------------------------------------------
-    def add(self, url: str, opts: dict, held: bool = False, name: str = "") -> Job:
-        job = Job(url=url.strip(), opts=dict(opts), name=name.strip())
+    def add(self, url: str, opts: dict, held: bool = False, name: str = "",
+            section: str = "") -> Job:
+        job = Job(url=url.strip(), opts=dict(opts), name=name.strip(),
+                  section=section.strip())
         if held:
             job.status = HELD
         with self._lock:
@@ -372,6 +378,7 @@ class Engine:
                 # instead of fetching the whole video again
                 "id": job.id,
                 "url": job.url, "name": job.name, "title": job.title,
+                "section": job.section,
                 "status": job.status, "opts": job.opts, "error": job.error,
                 "filepath": job.filepath, "pct": round(job.pct, 4),
                 "attempts": job.attempts, "item": job.item, "items": job.items,
@@ -390,7 +397,8 @@ class Engine:
             if not url:
                 continue
             opts = row.get("opts") if isinstance(row.get("opts"), dict) else {}
-            job = self.add(url, opts, name=str(row.get("name") or ""))
+            job = self.add(url, opts, name=str(row.get("name") or ""),
+                           section=str(row.get("section") or ""))
             # put the job back under its old id so it finds the fragments it
             # had already downloaded, rather than starting the video again
             old_id = str(row.get("id") or "")
@@ -900,6 +908,18 @@ class Engine:
                 o.get("playlists") and looks_like_playlist(job.url)))
         elif o.get("playlist_folders") and o.get("playlists") and looks_like_playlist(job.url):
             template = "%(playlist_title|Playlist)s/%(playlist_index|0)03d - " + template
+
+        if job.section:
+            # Only that stretch of the video is fetched. The cut lands on the
+            # nearest keyframe at or before the start, so a clip can begin a
+            # second or two early - better than starting late and losing the
+            # first words. The name says which part it is, so a clip and the
+            # whole video never collide.
+            start, _, end = job.section.partition("-")
+            args += ["--download-sections", "*%s-%s" % (start, end)]
+            label = section_label(job.section)
+            if label and template.endswith(".%(ext)s"):
+                template = template[:-len(".%(ext)s")] + " (%s).%%(ext)s" % label
         args += ["-o", template]
 
         quality = o.get("quality", "Best available")
@@ -1047,6 +1067,96 @@ def name_template(name: str, numbered: bool = False) -> str:
 _URL_RE = re.compile(r"https?://[^\s\"'<>|\\]+", re.I)
 
 
+# ------------------------------------------------------------------- clips --
+# Part of a video rather than all of it: "1:30-5:00", typed after the link.
+# Fetching a two-hour recording to keep five minutes of it, then trimming in
+# another program, is the slow way round; yt-dlp can ask for just the range.
+_TIME = r"(?:\d{1,2}:)?\d{1,2}:\d{2}(?:\.\d+)?|\d+(?:\.\d+)?"
+_RANGE = re.compile(
+    r"^\s*\[?\s*(?P<start>" + _TIME + r")?\s*(?:-|–|to)\s*"
+    r"(?P<end>" + _TIME + r"|end)?\s*\]?\s*$", re.I)
+_TRAILING_RANGE = re.compile(
+    r"\s+(\[?\s*(?:" + _TIME + r")?\s*(?:-|–|to)\s*(?:" + _TIME + r"|end)?\s*\]?)\s*$",
+    re.I)
+
+
+def to_seconds(text: str) -> float | None:
+    """"1:02:03", "5:00" or "90" as seconds; None if it is none of those."""
+    text = (text or "").strip()
+    if not text:
+        return None
+    try:
+        total = 0.0
+        for part in text.split(":"):
+            total = total * 60 + float(part)
+        return total
+    except ValueError:
+        return None
+
+
+def parse_section(text: str) -> str | None:
+    """A typed time range, normalised to "START-END" in seconds.
+
+    Either end may be left off - "-5:00" is the first five minutes, "1:30-"
+    is from a minute and a half to the end. Returns None for anything that
+    is not a usable range, including one that ends before it starts, so a
+    typo is caught when the row is staged rather than after a download.
+    """
+    match = _RANGE.match(text or "")
+    if not match or not (match.group("start") or match.group("end")):
+        return None
+    start = to_seconds(match.group("start") or "0")
+    raw_end = (match.group("end") or "").lower()
+    end = None if raw_end in ("", "end") else to_seconds(raw_end)
+    if start is None or (end is not None and end <= start):
+        return None
+    fmt = lambda v: ("%d" % v) if v == int(v) else ("%.2f" % v).rstrip("0")
+    return "%s-%s" % (fmt(start), "inf" if end is None else fmt(end))
+
+
+def split_section(text: str) -> tuple[str, str]:
+    """A URL box's contents as (link, section), the range typed after the link.
+
+    "https://site/v 1:30-5:00" gives the link and "90-300". With no range,
+    or one that does not parse, the text comes back whole and the section
+    empty - a malformed range is reported by the caller, not silently eaten.
+    """
+    text = (text or "").strip()
+    match = _TRAILING_RANGE.search(text)
+    if match:
+        section = parse_section(match.group(1))
+        if section:
+            return text[:match.start()].strip(), section
+    return text, ""
+
+
+def looks_like_range(text: str) -> bool:
+    """Does the text end in something shaped like a time range, valid or not?
+
+    Lets a backwards or garbled range be reported instead of ignored - the
+    difference between "that range is wrong" and silently downloading the
+    whole two-hour video.
+    """
+    return bool(_TRAILING_RANGE.search((text or "").strip()))
+
+
+def section_label(section: str) -> str:
+    """"90-300" as "1m30s-5m00s", for a file name that says which part it is.
+
+    Without it a clip and the full video would share a name, and the second
+    to finish would be refused as already there.
+    """
+    def one(value):
+        if value == "inf":
+            return "end"
+        seconds = int(float(value))
+        h, rem = divmod(seconds, 3600)
+        m, s = divmod(rem, 60)
+        return ("%dh%02dm%02ds" % (h, m, s)) if h else ("%dm%02ds" % (m, s))
+    start, _, end = (section or "").partition("-")
+    return "%s-%s" % (one(start), one(end)) if start and end else ""
+
+
 def parse_entries(text: str) -> list[tuple[str, str]]:
     """Read pasted text into (url, name) pairs, in order, without duplicates.
 
@@ -1068,7 +1178,15 @@ def parse_entries(text: str) -> list[tuple[str, str]]:
                 continue
             url = match.group(0).rstrip(".,);]")
             rest = line[match.end():]
-            name = rest.split("|", 1)[1].strip() if "|" in rest else ""
+            parts = [p.strip() for p in rest.split("|")[1:]] if "|" in rest else []
+            # everything after the first pipe is the name, pipes and all,
+            # unless the last part is a time range
+            name = " | ".join(parts).strip()
+            # "url | name | 1:30-5:00" - a range travels with the link, the
+            # way it is typed into the URL box, so staging shows it there
+            if len(parts) > 1 and parse_section(parts[-1]):
+                url = "%s %s" % (url, parts[-1])
+                name = " | ".join(parts[:-1]).strip()
             pairs = [(url, name)]
         else:
             pairs = [(m.rstrip(".,);]"), "") for m in _URL_RE.findall(line)]
