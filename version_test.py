@@ -68,11 +68,16 @@ if not tags:
     print("     no tags yet - nothing released, so nothing to disagree with",
           flush=True)
 else:
-    newest_tag = max(tags, key=lambda t: [int(n) for n in t[1:].split(".")])
-    ok(newest_tag[1:] == code,
-       "the newest tag is this version (%s vs %s)" % (newest_tag, code))
-    ok(("v" + code) in tags or newest_tag[1:] == code,
-       "this version is tagged, or is the one being prepared")
+    as_key = lambda v: [int(n) for n in v.split(".")]
+    newest_tag = max(tags, key=lambda t: as_key(t[1:]))
+    # Equal means this version is the released one; ahead means a release is
+    # being prepared and will be tagged when it is cut. Behind is the drift
+    # worth catching: the code claiming an older number than one already out.
+    ok(as_key(code) >= as_key(newest_tag[1:]),
+       "the code is not behind the newest tag (%s vs %s)" % (code, newest_tag))
+    if as_key(code) > as_key(newest_tag[1:]):
+        print("     %s is being prepared - tag it v%s when it is cut" % (code, code),
+              flush=True)
 
 print("5. the documents do not name a stale version", flush=True)
 # Only where a number is plainly this product's version. A bare "10.2.4" in
