@@ -170,13 +170,35 @@ def lessons_from_page(text: str) -> list[tuple[str, str]]:
 # The worksheets, brush sets and project files that come with a course. Two
 # lists, because they carry different risks: a link ending .pdf or .zip is
 # the handout it looks like, while a link ending .png is as likely to be the
-# site's logo or somebody's avatar. Images come along only when the page says
-# outright that they are meant to be saved.
-_FILE_EXT = ("pdf", "zip", "rar", "7z", "psd", "psb", "ai", "eps", "clip",
-             "procreate", "brushset", "brush", "abr", "atn", "tpl", "blend",
-             "obj", "fbx", "doc", "docx", "rtf", "xls", "xlsx", "csv", "ppt",
-             "pptx", "key", "epub", "mobi", "otf", "ttf")
+# site's logo or somebody's avatar.
+#
+# So images are taken only on evidence: the page marks the link as a
+# download, says so in words, or - best of all - puts it inside a section
+# plainly meant for downloads. That last one is what stops a course page
+# handing over every photograph on it while still collecting the reference
+# sheet a lesson attached.
+_FILE_EXT = ("pdf", "zip", "rar", "7z", "gz", "tar", "psd", "psb", "ai",
+             "eps", "clip", "procreate", "brushset", "brush", "abr", "atn",
+             "tpl", "blend", "obj", "fbx", "doc", "docx", "rtf", "xls",
+             "xlsx", "csv", "ppt", "pptx", "key", "epub", "mobi", "otf", "ttf")
 _IMAGE_EXT = ("png", "jpg", "jpeg", "gif", "webp", "tif", "tiff", "svg", "txt")
+
+# A part of the page given over to downloads. Sites label these consistently
+# enough to find: a heading that says so, or a container whose class or id
+# does. Everything between it and the end of its section counts as inside.
+_AREA_WORDS = (r"download|resource|material|attachment|handout|worksheet"
+               r"|freebie|asset|template|course\s*file|project\s*file|extra")
+_AREA_OPEN = re.compile(
+    r'<(?P<tag>section|div|aside|ul|ol|table|details)\b[^>]*'
+    r'(?:class|id|data-[a-z-]+)\s*=\s*"[^"]*(?:' + _AREA_WORDS + r')[^"]*"',
+    re.I)
+_AREA_HEADING = re.compile(
+    r"<(?P<tag>h[1-6]|summary|legend|strong|b)\b[^>]*>(?P<text>.{0,120}?)</(?P=tag)\s*>",
+    re.I | re.S)
+_SAYS_AREA = re.compile(_AREA_WORDS, re.I)
+# how far past a heading its section is taken to run, when nothing closes it
+_AREA_REACH = 4000
+_BLOCK_CLOSE = re.compile(r"</(?:section|aside|article|main|footer|div)\s*>", re.I)
 
 _HREF = re.compile(r'href\s*=\s*"([^"]+)"', re.I)
 _DOWNLOAD_ATTR = re.compile(r'\sdownload(?:\s*=\s*"([^"]*)")?[\s>]', re.I)
@@ -195,6 +217,62 @@ def _ext_of(url: str) -> str:
     tail = url.split("?")[0].split("#")[0].rsplit("/", 1)[-1]
     _, dot, ext = tail.rpartition(".")
     return ext.lower() if dot else ""
+
+
+def _download_areas(text: str) -> list[tuple[int, int]]:
+    """Where in the markup the page keeps its downloads, as (start, end) spans.
+
+    Two ways a site says it: a container named for it, or a heading that
+    announces one. A named container is measured to its matching close tag;
+    a heading has no container to measure, so its section is taken to run a
+    few thousand characters or until the next heading, whichever is sooner.
+    """
+    spans: list[tuple[int, int]] = []
+
+    for match in _AREA_OPEN.finditer(text):
+        tag = match.group("tag")
+        start = match.start()
+        # walk nested tags of the same name so an inner <div> does not end
+        # the section early
+        depth, pos, end = 0, match.end(), None
+        nest = re.compile(r"<(/?)%s\b" % tag, re.I)
+        for step in nest.finditer(text, pos):
+            if step.group(1):
+                if depth == 0:
+                    end = step.end()
+                    break
+                depth -= 1
+            else:
+                depth += 1
+        spans.append((start, end if end else min(len(text), start + _AREA_REACH)))
+
+    headings = [(m.start(), m.end(), _plain(m.group("text")))
+                for m in _AREA_HEADING.finditer(text)]
+    for i, (start, end, title) in enumerate(headings):
+        if not _SAYS_AREA.search(title):
+            continue
+        if _in_area(start, spans):
+            continue        # a named container already bounds this, and better
+        # A heading has nothing to measure, so the section it announces runs
+        # until whichever comes first: the next heading, the close of the
+        # block it sits in, or a few thousand characters. Without that last
+        # bound a "Downloads" heading near the foot of a page would claim
+        # everything after it, footer and all.
+        stop = min(len(text), end + _AREA_REACH)
+        for other_start, _other_end, _other in headings[i + 1:]:
+            if other_start > end:
+                stop = min(stop, other_start)
+                break
+        closing = _BLOCK_CLOSE.search(text, end)
+        if closing:
+            stop = min(stop, closing.start())
+        spans.append((end, stop))
+
+    return spans
+
+
+def _in_area(at: int, spans) -> bool:
+    return any(start <= at < end for start, end in spans)
 
 
 def _page_base(text: str) -> str:
@@ -217,12 +295,15 @@ def resources_from_page(text: str, base: str = "") -> list[tuple[str, str]]:
     if not text or "<a" not in text.lower():
         return []
     base = base or _page_base(text)
+    areas = _download_areas(text)
 
     found: list[tuple[str, str]] = []
     seen: set[str] = set()
-    for block in _ANCHOR.split(text)[1:]:
+    for anchor in _ANCHOR.finditer(text):
+        at = anchor.start()
+        block = text[anchor.end():anchor.end() + 2000]
         end = _ANCHOR_END.search(block)
-        card = block[:end.start()] if end else block[:2000]
+        card = block[:end.start()] if end else block
         opening, _, inner = card.partition(">")
         href = _HREF.search(opening)
         if not href:
@@ -244,10 +325,13 @@ def resources_from_page(text: str, base: str = "") -> list[tuple[str, str]]:
         ext = _ext_of(url)
         if attr and attr.group(1):
             ext = _ext_of(attr.group(1)) or ext
+        inside = _in_area(at, areas)
         if ext in _FILE_EXT:
             pass                          # a handout by any reading
-        elif ext in _IMAGE_EXT and (attr or _SAYS_DOWNLOAD.search(label)):
-            pass                          # an image the page offers to save
+        elif ext in _IMAGE_EXT and (attr or inside or _SAYS_DOWNLOAD.search(label)):
+            # an image the page offers to save, or one sitting in the part of
+            # the page given over to downloads
+            pass
         else:
             continue
         if url in seen:

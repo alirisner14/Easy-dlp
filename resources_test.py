@@ -51,6 +51,50 @@ ok(len(set(urls)) == len(urls), "the same file listed twice is staged once")
 ok(all(u.startswith("https://school.example.com/") for u in urls),
    "relative links are made whole from the page's own address")
 
+print("1b. a section given over to downloads changes what counts", flush=True)
+AREA = """<link rel="canonical" href="https://school.example.com/lessons/9">
+<header><a href="/logo.png">Home</a></header>
+<div class="lesson-body">
+  <a href="/photos/studio-shot.jpg">A photo of my desk</a>
+  <a href="/uploads/Notes.pdf">Lesson notes</a>
+</div>
+<section class="lesson-resources">
+  <h3>Download your resources</h3>
+  <a href="/files/brushes.brushset">Brush set</a>
+  <a href="/files/swatches.procreate">Swatches</a>
+  <a href="/files/refs.zip">Reference pack</a>
+  <a href="/files/pack.rar">Archive</a>
+  <a href="/files/bundle.7z">Bundle</a>
+  <a href="/files/colour-chart.png">Colour chart</a>
+  <a href="/files/outline.svg">Outline template</a>
+</section>
+<footer><a href="/badges/award.png">Award</a></footer>"""
+rows = pagescan.resources_from_page(AREA)
+urls = " ".join(u for u, _n in rows)
+names = [n for _u, n in rows]
+ok(len(rows) == 8, "everything in the downloads section, plus the pdf (%d)" % len(rows))
+for want in ("brushset", "procreate", "zip", "rar", "7z"):
+    ok(any(n.lower().endswith("." + want) for n in names), "a .%s is taken" % want)
+ok("ColourChart.png" in names and "OutlineTemplate.svg" in names,
+   "an image inside the downloads section comes too")
+ok("studio-shot" not in urls,
+   "but the same kind of image outside it does not")
+ok("logo.png" not in urls and "award.png" not in urls,
+   "and the header and footer are untouched - a heading does not claim "
+   "the rest of the page")
+
+print("1c. a heading alone marks an area, and stops at its block", flush=True)
+HEAD = """<div><a href="https://x.com/a/photo.jpg">A photo</a></div>
+<div><h4>Course materials</h4>
+<a href="https://x.com/f/sheet.png">Practice sheet</a></div>
+<footer><a href="https://x.com/b/logo.png">Logo</a></footer>"""
+rows = pagescan.resources_from_page(HEAD)
+urls = " ".join(u for u, _n in rows)
+ok(len(rows) == 1 and "sheet.png" in urls,
+   "the one under the heading (%s)" % [n for _u, n in rows])
+ok("photo.jpg" not in urls, "nothing before the heading")
+ok("logo.png" not in urls, "nothing after the block it sits in")
+
 print("2. nothing is invented where there is nothing to find", flush=True)
 ok(pagescan.resources_from_page("") == [], "empty text")
 ok(pagescan.resources_from_page("<a href='/about'>About</a>") == [], "an ordinary page")

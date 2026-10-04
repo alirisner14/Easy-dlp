@@ -13,6 +13,24 @@ checks that the number in `evd/__init__.py`, the newest heading here, and the
 newest tag all agree, because three places that can disagree eventually
 will.
 
+## Unreleased
+
+### Changed
+
+- **Handouts are read from the part of a page meant for them.** Extension
+  alone decided it before, which missed files a page offered without naming
+  them and could not tell a reference sheet from a photograph. A page that
+  keeps its downloads in a named section - or under a heading that says
+  Downloads, Resources, Materials - now has that section read as a whole, so
+  an image inside it comes along and the same kind of image outside it does
+  not. `.brushset`, `.procreate`, `.brush`, `.rar` and `.7z` are taken
+  anywhere on the page, as `.pdf` and `.zip` already were.
+
+  A heading has no container to measure, so the section it announces is
+  bounded three ways: the next heading, the close of the block it sits in, or
+  a few thousand characters. Without that last bound a "Downloads" heading
+  near the foot of a page claimed the footer with it.
+
 ## 1.1.0 - 2026-10-03
 
 ### Added
