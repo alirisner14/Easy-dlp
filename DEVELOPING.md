@@ -37,6 +37,7 @@ failed. Run them from the project root.
 | `resume_test.py` | a restart keeps part-finished downloads |
 | `pagescan_test.py` | a course page yields every lesson, named and numbered |
 | `layout_test.py` | the left column's cards are as tall as what is drawn on them, so nothing is clipped |
+| `version_test.py` | the version in the code, the changelog and the git tag all agree |
 | `packaging_test.py` | a release build finds the yt-dlp and ffmpeg it carries, rather than needing them on PATH |
 | `paste_test.py` | a pasted web page stages its videos, not every address in its markup |
 | `resources_test.py` | handouts are found without dragging in the site's logo, and fetched as files rather than run through the video machinery |

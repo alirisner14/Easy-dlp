@@ -8,7 +8,12 @@ fixed. The version lives in `evd/__init__.py`.
 Anything before 1.0.0 predates this repository, so it is recorded from memory
 rather than from history.
 
-## 1.1.0 - 2026-09-22
+Each released version is tagged `vMAJOR.MINOR.PATCH`. `version_test.py`
+checks that the number in `evd/__init__.py`, the newest heading here, and the
+newest tag all agree, because three places that can disagree eventually
+will.
+
+## 1.1.0 - 2026-10-03
 
 ### Added
 
@@ -83,6 +88,13 @@ rather than from history.
   to take.
 
 ### Changed
+
+- **The licence is now proprietary.** Versions published before 2026-10-03
+  were MIT, and that grant still covers those copies - it cannot be
+  withdrawn. Everything from this release on is licensed, not sold, under
+  `legal/shared/EULA.md`. The bundled open-source tools keep their own
+  licences, which this does not touch and which still have to be shipped
+  with the application; see `legal/shared/THIRD-PARTY-LICENCES.md`.
 
 - **Start Download moved to the foot of the options.** It used to sit above
   them, which put the folder the files land in past the button - easy to press

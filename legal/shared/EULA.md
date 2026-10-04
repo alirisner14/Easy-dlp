@@ -1,8 +1,8 @@
 # End User Licence Agreement
 
-**Easy-dlp**
+**[PRODUCT]**
 Published by On the Rise Digital
-Version 1.1.0 — last updated 03 October 2026
+Applies to the version you purchased — last updated 03 October 2026
 
 > **Template.** Name the product where this says Easy-dlp, and check
 > `03 October 2026` before publishing. Used by both distribution routes — see
