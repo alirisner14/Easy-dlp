@@ -2,10 +2,10 @@
 
 **Easy-dlp**
 Published by On the Rise Digital
-Version 1.1.0 — last updated [DATE]
+Version 1.1.0 — last updated 03 October 2026
 
-> **Template.** Fill in `[SUPPORT EMAIL]`, `[WEBSITE]`, `[STATE]` and
-> `[DATE]` before publishing. Used by both distribution routes — see
+> **Template.** Fill in `ontherisedigital@gmail.com`, `https://ontherisedigital.lemonsqueezy.com`, `Ohio` and
+> `03 October 2026` before publishing. Used by both distribution routes — see
 > `../store/SUBMISSION.md` for the three sections that must change if you
 > supply this to the Microsoft Store.
 
@@ -20,7 +20,7 @@ helper scripts supplied with it ("the Software").
 
 By installing, copying or using the Software you accept this Agreement. If
 you do not accept it, do not install the Software, and contact
-[SUPPORT EMAIL] about a refund under the terms in section 9.
+ontherisedigital@gmail.com about a refund under the terms in section 9.
 
 ## 2. What you may do
 
@@ -98,7 +98,7 @@ alongside the Software and are listed in `THIRD-PARTY-LICENCES.md`:
 **FFmpeg is dynamically invoked as a separate program and is not modified.**
 You are entitled to the FFmpeg source code; it is available from
 <https://ffmpeg.org/download.html>, and we will supply the exact version we
-ship on request to [SUPPORT EMAIL]. You may replace the copy of FFmpeg we
+ship on request to ontherisedigital@gmail.com. You may replace the copy of FFmpeg we
 supply with your own build.
 
 ## 6. The Software does not supply content
@@ -158,7 +158,7 @@ section.
 **9.3** At our discretion, if the Software does not function on a supported
 system and we cannot resolve it with you.
 
-Before requesting a refund, please contact [SUPPORT EMAIL]. Most problems are
+Before requesting a refund, please contact ontherisedigital@gmail.com. Most problems are
 a missing component or a site that has changed, and both are usually fixable.
 
 ## 10. Limitation of liability
@@ -196,7 +196,7 @@ survive termination. No refund is due on termination for breach.
 
 ## 13. General
 
-**13.1 Governing law.** This Agreement is governed by the laws of [STATE],
+**13.1 Governing law.** This Agreement is governed by the laws of Ohio,
 United States, without regard to its conflict of law rules. If you are a
 consumer resident elsewhere, you keep the benefit of any mandatory consumer
 protections of your own country.
@@ -219,4 +219,4 @@ bought.
 **13.6 Assignment.** You may not assign this Agreement. We may assign it as
 part of a sale or transfer of the business.
 
-**13.7 Contact.** [SUPPORT EMAIL] — [WEBSITE]
+**13.7 Contact.** ontherisedigital@gmail.com — https://ontherisedigital.lemonsqueezy.com

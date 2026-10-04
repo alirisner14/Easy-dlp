@@ -1,7 +1,7 @@
 # Refund Policy
 
 **On the Rise Digital** — Alison Risner
-Last updated [DATE]
+Last updated 03 October 2026
 
 > **Direct sales only.** Microsoft Store purchases are governed by
 > Microsoft's refund policy, which overrides this one entirely.
@@ -78,19 +78,19 @@ immediately. **At checkout you will be asked to tick a box** confirming that
 you want immediate access and understand you are giving up the right to
 cancel. If you tick it and download, the 14-day right no longer applies.
 
-Prefer to keep it? Do not tick the box. Email [SUPPORT EMAIL] and we will
+Prefer to keep it? Do not tick the box. Email ontherisedigital@gmail.com and we will
 hold delivery for 14 days instead.
 
 ## 5. How to ask
 
-Email **[SUPPORT EMAIL]** with:
+Email **ontherisedigital@gmail.com** with:
 
 - the email address you bought with
 - the order number or approximate purchase date
 - what went wrong
 
-We reply within **[2 business days]** and process approved refunds within
-**[5 business days]**. The money returns by the method you paid with; your
+We reply within **2 business days** and process approved refunds within
+**5 business days**. The money returns by the method you paid with; your
 bank may take several days longer to show it.
 
 ## 6. Chargebacks
@@ -106,10 +106,10 @@ charge back without contacting us.
 
 | Where you bought | Whose policy applies |
 |---|---|
-| Our website, [WEBSITE] | this one |
+| Our website, https://ontherisedigital.lemonsqueezy.com | this one |
 | A marketplace or storefront we sell through | this one, plus their own buyer protection |
 | Microsoft Store | Microsoft's, which overrides this entirely |
 
 ## 8. Contact
 
-[SUPPORT EMAIL] — we answer every email.
+ontherisedigital@gmail.com — we answer every email.

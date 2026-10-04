@@ -40,7 +40,7 @@ a sole trader is a genuine ongoing burden, not a one-off.
 
 - [ ] `shared/EULA.md` — fill placeholders, ship in installer and install folder
 - [ ] `shared/TERMS-OF-USE.md` — ship and publish
-- [ ] `shared/PRIVACY-POLICY.md` — publish at `[WEBSITE]/privacy`
+- [ ] `shared/PRIVACY-POLICY.md` — publish at `https://ontherisedigital.lemonsqueezy.com/privacy`
 - [ ] `shared/THIRD-PARTY-LICENCES.md` — ship, and link from About
 - [ ] `direct/TERMS-OF-SALE.md` — publish, link from checkout
 - [ ] `direct/REFUND-POLICY.md` — publish, link from checkout **and** the

@@ -1,7 +1,7 @@
 # Terms of Use
 
 **Easy-dlp** — On the Rise Digital
-Last updated [DATE]
+Last updated 03 October 2026
 
 These Terms of Use govern how you may use Easy-dlp. They form part of the
 [End User Licence Agreement](EULA.md); where the two differ on the same point,
@@ -116,8 +116,8 @@ becoming inaccessible is not a defect.
 
 We may update these Terms. The version in force for you is the one supplied
 with the version of the Software you bought. Material changes will be noted
-in the changelog and on [WEBSITE].
+in the changelog and on https://ontherisedigital.lemonsqueezy.com.
 
 ## 9. Contact
 
-[SUPPORT EMAIL]
+ontherisedigital@gmail.com

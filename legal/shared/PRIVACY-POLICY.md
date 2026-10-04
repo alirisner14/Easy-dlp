@@ -1,10 +1,10 @@
 # Privacy Policy
 
 **Easy-dlp** — On the Rise Digital
-Last updated [DATE]
+Last updated 03 October 2026
 
 > This must be reachable at a public URL before you can submit to the
-> Microsoft Store. Publish it at `[WEBSITE]/privacy` and give that URL in
+> Microsoft Store. Publish it at `https://ontherisedigital.lemonsqueezy.com/privacy` and give that URL in
 > Partner Center.
 
 ---
@@ -69,7 +69,7 @@ your connection as they would any other, subject to their own privacy
 policies.
 
 If you enable a feature that checks for a new version, it requests a single
-version file from [WEBSITE] and sends nothing but the request itself.
+version file from https://ontherisedigital.lemonsqueezy.com and sends nothing but the request itself.
 *(Remove this paragraph if you do not ship update checking.)*
 
 ## 5. Purchase information
@@ -107,7 +107,7 @@ rights to access, correct, export and delete personal information held about
 you, and not to be discriminated against for exercising them.
 
 In practice the only personal information we hold is your purchase record and
-any support emails. To see, correct or delete it, write to [SUPPORT EMAIL]
+any support emails. To see, correct or delete it, write to ontherisedigital@gmail.com
 and we will respond within 30 days.
 
 **We have never sold personal information and have no plans to.** There is no
@@ -134,11 +134,11 @@ scheduled task. It does not modify your browser or your system settings.
 ## 11. Changes
 
 If this policy changes, the updated version will be published at
-[WEBSITE]/privacy with a new date at the top. If a change ever meant we
+https://ontherisedigital.lemonsqueezy.com/privacy with a new date at the top. If a change ever meant we
 started collecting something, we would say so plainly and ask first.
 
 ## 12. Contact
 
 Alison Risner, trading as On the Rise Digital
-[SUPPORT EMAIL]
-[WEBSITE]
+ontherisedigital@gmail.com
+https://ontherisedigital.lemonsqueezy.com

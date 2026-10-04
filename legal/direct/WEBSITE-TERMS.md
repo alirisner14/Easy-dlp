@@ -1,25 +1,30 @@
 # Website Terms of Use
 
-**[WEBSITE]** — On the Rise Digital
-Last updated [DATE]
+**https://ontherisedigital.lemonsqueezy.com** — On the Rise Digital
+Last updated 03 October 2026
 
 > This covers **the website**, which is a different thing from the software
 > sold on it. People conflate the two and then find neither document says
 > what they needed. Software use → `shared/TERMS-OF-USE.md`. Buying →
 > `direct/TERMS-OF-SALE.md`. Browsing this site → here.
 >
-> Not needed for the Microsoft Store route unless you also run a site.
+> **You may not need this yet.** Selling through a hosted storefront means
+> the storefront's own terms cover the browsing, and Lemon Squeezy supplies
+> those. Publish this when you run a site of your own. Keeping it written
+> now costs nothing and means it is ready the day you do.
+>
+> Not needed for the Microsoft Store route either.
 
 ---
 
 ## 1. Agreement
 
-By using [WEBSITE] you agree to these terms. If you do not, please do not use
+By using https://ontherisedigital.lemonsqueezy.com you agree to these terms. If you do not, please do not use
 the site.
 
 ## 2. Who runs this site
 
-Alison Risner, trading as On the Rise Digital. Contact: [SUPPORT EMAIL]
+Alison Risner, trading as On the Rise Digital. Contact: ontherisedigital@gmail.com
 
 ## 3. What is on it
 
@@ -50,7 +55,7 @@ vulnerabilities, or interfere with its operation.
 
 **5.6** Impersonate us, or present the site or our products as your own.
 
-Found a genuine security problem? Please tell us at [SUPPORT EMAIL] before
+Found a genuine security problem? Please tell us at ontherisedigital@gmail.com before
 telling anyone else. We will respond and we will credit you if you want
 credit.
 
@@ -95,9 +100,9 @@ page, with its date at the top.
 
 ## 12. Governing law
 
-The laws of [STATE], United States. If you are a consumer resident elsewhere,
+The laws of Ohio, United States. If you are a consumer resident elsewhere,
 you keep the benefit of any mandatory protections of your own country.
 
 ## 13. Contact
 
-[SUPPORT EMAIL]
+ontherisedigital@gmail.com

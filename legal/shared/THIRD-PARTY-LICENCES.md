@@ -41,7 +41,7 @@ Three things we must state, and do:
    `yt-dlp` launches `ffmpeg.exe` as its own process.
 3. **You are entitled to the source code.** It is at
    <https://ffmpeg.org/download.html>, and we will supply the exact source
-   for the build we ship on request to [SUPPORT EMAIL], at no charge.
+   for the build we ship on request to ontherisedigital@gmail.com, at no charge.
 
 You may replace the `ffmpeg.exe` we supply with your own build. Put it in the
 install folder, or on your `PATH`, and the application will use it.

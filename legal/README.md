@@ -1,7 +1,7 @@
 # Legal and release documents
 
 Drafts for **On the Rise Digital** (Alison Risner) as a software publisher.
-Written as templates — `[PRODUCT]` where a product name goes — so the same
+Written as templates — `the software` where a product name goes — so the same
 set serves the next thing you release, not only Easy-dlp.
 
 **They are not legal advice and I am not a lawyer.** They cover what these
@@ -74,17 +74,30 @@ money, delivering goods, handling refunds and answering for tax.
 | `SUBMISSION.md` | what the Store needs, and what it saves you |
 | `CHECKLIST.md` | you |
 
-## Fill these in
+## Already filled in
 
-`[SUPPORT EMAIL]` · `[WEBSITE]` · `[STATE]` · `[DATE]` · `[PRODUCT]` ·
-`[PROVIDER]` · `[VERSION]` · `[CURRENCY]`
+| | |
+|---|---|
+| Contracting party | Alison Risner, trading as On the Rise Digital |
+| Email | ontherisedigital@gmail.com |
+| State | Ohio |
+| Currency | USD |
+| Payment provider | Lemon Squeezy |
+| Store / web address | https://ontherisedigital.lemonsqueezy.com |
+
+**`[VERSION]` is the only placeholder left**, in
+`shared/THIRD-PARTY-LICENCES.md`. It is per-release by design — fill it from
+`yt-dlp --version` and `ffmpeg -version` at build time, not once.
+
+If you change provider or claim a different store subdomain:
 
 ```bash
-grep -rn "\[SUPPORT EMAIL\]\|\[WEBSITE\]\|\[STATE\]\|\[DATE\]\|\[PRODUCT\]\|\[PROVIDER\]\|\[VERSION\]\|\[CURRENCY\]" legal/
+grep -rln "lemonsqueezy" legal/ | xargs sed -i 's|ontherisedigital.lemonsqueezy.com|YOUR-URL|g'
 ```
 
-Run it before every release. A published document with `[DATE]` in it
-undermines everything else on the page.
+Two things in `direct/COOKIE-NOTICE.md` stay open on purpose:
+`[ANALYTICS PROVIDER]` and `[PERIOD]`, in Version B only. Use Version A and
+delete Version B, and they go with it.
 
 ---
 

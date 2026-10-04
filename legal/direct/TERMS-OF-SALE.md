@@ -1,10 +1,10 @@
 # Terms of Sale
 
 **On the Rise Digital** — Alison Risner
-Last updated [DATE]
+Last updated 03 October 2026
 
-> **Template.** Replace `[PRODUCT]` with the product being sold, and fill in
-> `[SUPPORT EMAIL]`, `[WEBSITE]`, `[STATE]`, `[PROVIDER]`, `[PRICE]`.
+> **Template.** Replace `the software` with the product being sold, and fill in
+> `ontherisedigital@gmail.com`, `https://ontherisedigital.lemonsqueezy.com`, `Ohio`, `Lemon Squeezy`, `the price shown at checkout`.
 > This document is needed **only when selling direct** — through your own
 > site or a marketplace. If you sell through the Microsoft Store, Microsoft
 > is the seller and its terms govern the transaction instead.
@@ -19,13 +19,13 @@ transaction only.
 
 ## 1. Who you are buying from
 
-Alison Risner, trading as On the Rise Digital, [STATE], United States.
-Contact: [SUPPORT EMAIL]
+Alison Risner, trading as On the Rise Digital, Ohio, United States.
+Contact: ontherisedigital@gmail.com
 
 > **If you register a DBA or form an LLC, change this line first.** It names
 > the party the customer is contracting with, and it must be accurate.
 
-Payments are processed by **[PROVIDER]**. Depending on the provider, they may
+Payments are processed by **Lemon Squeezy**. Depending on the provider, they may
 act as **merchant of record** — meaning they are the seller of record for tax
 purposes and their terms also apply to the transaction. Their name will
 appear on your card statement.
@@ -48,7 +48,7 @@ work with any particular third-party service.
 
 ## 4. Price, currency and tax
 
-**4.1** Prices are shown in [CURRENCY] and are listed at [WEBSITE].
+**4.1** Prices are shown in USD and are listed at https://ontherisedigital.lemonsqueezy.com.
 
 **4.2** Prices may change at any time. The price that applies is the one
 shown at checkout when you buy.
@@ -66,7 +66,7 @@ sent to the email address you gave at checkout.
 **5.2** **Check your spam folder** before contacting us about a missing
 delivery. That is the cause the overwhelming majority of the time.
 
-**5.3** If you have not received it within one hour, email [SUPPORT EMAIL]
+**5.3** If you have not received it within one hour, email ontherisedigital@gmail.com
 with the name on the order and we will resend it.
 
 **5.4** Giving a wrong or inactive email address is the one failure mode we
@@ -85,7 +85,7 @@ EULA and we may deactivate it.
 **6.3** If a key is found published anywhere public, we may deactivate it
 without refund.
 
-**6.4** Lost your key? Email [SUPPORT EMAIL] from the address you bought
+**6.4** Lost your key? Email ontherisedigital@gmail.com from the address you bought
 with, and we will resend it. If you no longer have that address, tell us the
 approximate date and amount and we will try to find the order.
 
@@ -161,14 +161,14 @@ is the one published when you bought. Changes are not retroactive.
 
 ## 15. Governing law and disputes
 
-These Terms are governed by the laws of [STATE], United States. If you are a
+These Terms are governed by the laws of Ohio, United States. If you are a
 consumer resident elsewhere, you keep the benefit of any mandatory consumer
 protections of your own country, and may bring proceedings there.
 
-Before any formal action, please contact [SUPPORT EMAIL]. Most disputes are a
+Before any formal action, please contact ontherisedigital@gmail.com. Most disputes are a
 misunderstanding and resolve in one exchange.
 
 ## 16. Contact
 
 Alison Risner, trading as On the Rise Digital
-[SUPPORT EMAIL] — [WEBSITE]
+ontherisedigital@gmail.com — https://ontherisedigital.lemonsqueezy.com

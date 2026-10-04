@@ -1,7 +1,7 @@
 # Cookie Notice
 
-**[WEBSITE]** — On the Rise Digital
-Last updated [DATE]
+**https://ontherisedigital.lemonsqueezy.com** — On the Rise Digital
+Last updated 03 October 2026
 
 > **Only needed if your website sets cookies.** The *software* sets none —
 > that is in the Privacy Policy. This is about the site.
@@ -22,15 +22,15 @@ Use this if your site is plain pages and a checkout link.
 > advertising, no tracking pixels and no third-party scripts that follow you
 > around.
 >
-> When you buy something, our payment provider **[PROVIDER]** sets cookies
+> When you buy something, our payment provider **Lemon Squeezy** sets cookies
 > necessary to run the checkout and prevent fraud. Those are strictly
 > necessary for a transaction you asked for, and are governed by
-> [their privacy policy]([PROVIDER PRIVACY URL]).
+> [their privacy policy](https://www.lemonsqueezy.com/privacy).
 >
 > That is the whole of it. There is no banner to click because there is
 > nothing to consent to.
 >
-> Questions: [SUPPORT EMAIL]
+> Questions: ontherisedigital@gmail.com
 
 ---
 
@@ -49,8 +49,8 @@ Use this if you add Plausible, Fathom, Google Analytics or similar.
 >
 > | Cookie | Set by | Why | How long |
 > |---|---|---|---|
-> | Checkout session | [PROVIDER] | to run your purchase | the session |
-> | Fraud prevention | [PROVIDER] | to stop fraudulent orders | [PERIOD] |
+> | Checkout session | Lemon Squeezy | to run your purchase | the session |
+> | Fraud prevention | Lemon Squeezy | to stop fraudulent orders | [PERIOD] |
 > | [ANALYTICS COOKIE] | [ANALYTICS PROVIDER] | to count visits | [PERIOD] |
 >
 > ### Strictly necessary cookies
@@ -68,11 +68,11 @@ Use this if you add Plausible, Fathom, Google Analytics or similar.
 > ### Your choices
 >
 > You can refuse non-essential cookies using the banner, and change your mind
-> at any time at [WEBSITE]/cookies. You can also block or delete cookies in
+> at any time at https://ontherisedigital.lemonsqueezy.com/cookies. You can also block or delete cookies in
 > your browser settings — the site will still work, though the checkout needs
 > its own to function.
 >
-> Questions: [SUPPORT EMAIL]
+> Questions: ontherisedigital@gmail.com
 
 ---
 
