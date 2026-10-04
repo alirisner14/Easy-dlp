@@ -17,6 +17,18 @@ will.
 
 ### Added
 
+- **The collector scripts can be paused and stopped.** A run over a big
+  library takes many minutes, and started on the wrong page - or once it is
+  plainly missing everything - the only way out was to wait for it to try
+  every link. Both scripts now show a small bar while they work, with a
+  running count of found and missed, a Pause and a Stop. Stop answers within
+  a fraction of a second, cuts off pages still loading rather than waiting
+  for them to time out, and opens the links panel with everything found so
+  far. The Vimeo collector's panel then offers to carry on with the lessons
+  not reached, at normal speed, rather than starting over. The same controls
+  work as console commands - evdPause(), evdResume(), evdStop() - and
+  starting a second run on top of one already going is refused.
+
 - **Combine finished videos into one file, two ways.** Tick rows and Combine
   joins exactly those, in queue order - for batches that mix courses, where
   only the person downloading knows what belongs together. Tick nothing and

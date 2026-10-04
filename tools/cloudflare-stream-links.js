@@ -26,6 +26,11 @@
  *   5. wait for the panel (about ten seconds a lesson), Copy, then Paste
  *      into the downloader
  *
+ * While it runs, a small bar sits bottom-right with a running count, Pause
+ * and Stop. Stop keeps every link caught so far and opens the panel at once.
+ * The same controls work from the console: evdPause(), evdResume(),
+ * evdStop().
+ *
  * If lessons come back MISSED, the player was not running: press play again
  * and re-run. Clicking through the lessons yourself works too - this only
  * automates what the browser has already fetched.
@@ -33,6 +38,13 @@
  * The links expire about six hours after capture, so download the same day.
  */
 (async () => {
+  // Running it twice at once would click through two runs' lessons at the
+  // same time and tangle both results together.
+  if (window.evdControl && window.evdControl.running) {
+    alert('Already collecting on this page. Press Stop on the bar in the corner '
+        + '(or type evdStop() in the console) first.');
+    return;
+  }
   const MANIFEST = '/manifest/video.m3u8';
   const seen = () => performance.getEntriesByType('resource')
     .filter(e => e.name.includes('cloudflarestream.com') && e.name.includes(MANIFEST))
@@ -113,22 +125,83 @@
   // workbook belongs to the class, not to one lesson
   const classFiles = filesHere();
 
+  // -- stop and pause -------------------------------------------------------
+  // Each lesson takes up to ten seconds, so a long class is minutes of
+  // waiting - and started on the wrong page, or once it is plainly missing
+  // everything, there is no reason to sit through it. A small bar in the
+  // corner offers Pause and Stop while it works; Stop keeps what has been
+  // caught so far and opens the links panel at once. The same are console
+  // commands:  evdPause()   evdResume()   evdStop()
+  const control = { running: true, paused: false, stopped: false };
+  window.evdControl = control;
+  const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+  const bar = document.createElement('div');
+  bar.id = 'evd-bar';
+  bar.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;'
+    + 'background:#0e1020;color:#e8ecff;border:2px solid #6c7cff;border-radius:12px;'
+    + 'padding:10px 12px;font:13px system-ui;display:flex;gap:10px;align-items:center;'
+    + 'box-shadow:0 10px 30px rgba(0,0,0,.5)';
+  const barText = document.createElement('span');
+  barText.style.cssText = 'min-width:190px';
+  const barBtn = (text, bg) => {
+    const b = document.createElement('button');
+    b.textContent = text;
+    b.style.cssText = 'border:0;border-radius:8px;padding:7px 12px;cursor:pointer;'
+      + 'font:600 12px system-ui;color:#fff;background:' + bg;
+    return b;
+  };
+  const pauseBtn = barBtn('Pause', '#3a4170');
+  const stopBtn = barBtn('Stop', '#b3424a');
+  bar.append(barText, pauseBtn, stopBtn);
+  const tally = { done: 0, of: rows.size, ok: 0 };
+  const showProgress = () => {
+    const state = control.stopped ? 'Stopping…'
+      : control.paused ? 'Paused at ' + tally.done + ' of ' + tally.of
+      : 'Lesson ' + tally.done + ' of ' + tally.of;
+    barText.textContent = state + (tally.done ? '  ·  ' + tally.ok + ' found, '
+                                   + (tally.done - tally.ok) + ' missed' : '');
+    pauseBtn.textContent = control.paused ? 'Resume' : 'Pause';
+    pauseBtn.disabled = stopBtn.disabled = control.stopped;
+  };
+  window.evdPause = () => { if (!control.stopped) control.paused = true; showProgress(); return 'paused'; };
+  window.evdResume = () => { control.paused = false; showProgress(); return 'resumed'; };
+  window.evdStop = () => {
+    control.stopped = true; control.paused = false; showProgress();
+    return 'stopping - the links caught so far will open in a moment';
+  };
+  pauseBtn.onclick = () => (control.paused ? window.evdResume() : window.evdPause());
+  stopBtn.onclick = () => window.evdStop();
+  document.body.appendChild(bar);
+  showProgress();
+
   const found = [];
   for (const r of [...rows.values()]) {
+    while (control.paused && !control.stopped) await sleep(250);
+    if (control.stopped) break;
     // clear the log first: a lesson already played earlier would otherwise
     // look like it produced nothing
     performance.clearResourceTimings();
     r.el.click();
     let url = null;
-    for (let i = 0; i < 10 && !url; i++) {
-      await new Promise(res => setTimeout(res, 1000));
+    // checked four times a second rather than once, so Stop answers at once
+    for (let i = 0; i < 40 && !url && !control.stopped; i++) {
+      await sleep(250);
       url = seen()[0] || null;
     }
+    if (control.stopped && !url) break;
     const files = filesHere();      // whatever this lesson added to the page
     console.log('[evd] %s. %s %s%s', r.n, r.title, url ? 'ok' : 'MISSED',
                 files.length ? ' +' + files.length + ' file(s)' : '');
     found.push({ n: r.n, title: r.title, url, files });
+    tally.done++;
+    if (url) tally.ok++;
+    showProgress();
   }
+  const notReached = rows.size - found.length;
+  if (control.stopped) console.log('[evd] stopped - showing what was caught so far');
+  bar.remove();
+  control.running = false;
 
   const lines = [];
   let fileCount = 0;
@@ -161,6 +234,8 @@
     + '<div style="opacity:.8">Copy, then press Paste in Easy-dlp. '
     + 'The video links expire in about six hours.'
     + (missed ? ' <b style="color:#ffb4b4">Missed: ' + missed + '</b> - run it again.' : '')
+    + (notReached ? ' <b style="color:#ffd27a">Stopped with ' + notReached + ' lesson'
+                    + (notReached === 1 ? '' : 's') + ' not reached.</b>' : '')
     + '</div>';
 
   const ta = document.createElement('textarea');

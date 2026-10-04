@@ -235,6 +235,25 @@ address**, or find the `<iframe>` in `F12` → Elements. You want
 
 Course-embedded Vimeo videos often need no cookies and no referer at all.
 
+### Stopping a collector part way
+
+Both scripts show a small bar in the bottom-right corner while they work,
+with a running count of what was found and missed, and two buttons:
+
+- **Pause** holds the run where it is; **Resume** carries on.
+- **Stop** ends it straight away — pages still loading are cut off rather
+  than left to time out — and opens the links panel with everything found so
+  far. Use it when you started on the wrong page, or the count shows it
+  missing everything.
+
+After a Stop, the Vimeo collector's panel offers **Carry on with the N not
+reached**, which picks up where it stopped instead of starting over.
+
+If the bar is out of reach, the same controls work in the Console:
+`evdPause()`, `evdResume()`, `evdStop()`. Closing the links panel while a
+retry is running stops it too, and running the script a second time while
+one is already going is refused rather than doubling up.
+
 ### Running the collector scripts without pasting them every time
 
 A `.js` file cannot be dragged into the Console — it has to be text. Pasting

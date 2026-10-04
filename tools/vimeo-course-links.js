@@ -34,6 +34,13 @@
  * another try; "no player on the page" is a written post with no video on it,
  * and will say the same next time.
  *
+ * While it runs, a small bar sits bottom-right with a running count, Pause
+ * and Stop. Stop keeps everything found so far and opens the links panel at
+ * once - for a run started on the wrong page, or one plainly missing
+ * everything - and the panel then offers to carry on from where it stopped.
+ * The same controls work from the console: evdPause(), evdResume(),
+ * evdStop().
+ *
  * Scroll to the bottom of the page first. Only the tutorials the page has
  * actually drawn are collected, and these sites add more as you scroll.
  *
@@ -45,6 +52,13 @@
  * reads addresses the browser already has.
  */
 (async () => {
+  // Running it twice at once would double the load on the site and tangle
+  // the two runs' results together.
+  if (window.evdControl && window.evdControl.running) {
+    alert('Already collecting on this page. Press Stop on the bar in the corner '
+        + '(or type evdStop() in the console) first.');
+    return;
+  }
   const camel = s => (s.match(/[A-Za-z0-9]+/g) || [])
     .map(w => w[0].toUpperCase() + w.slice(1)).join('');
 
@@ -203,6 +217,70 @@
   // the cure for that is to ask less often, not to wait longer for an answer
   // that was never coming.
   const BREATH = 400;
+  const wait = ms => new Promise(res => setTimeout(res, ms));
+
+  // -- stop and pause -------------------------------------------------------
+  // A run over a big library takes many minutes, and started on the wrong
+  // page - or once it is plainly missing everything - waiting for it to try
+  // every link is the worst way to find out. So a small bar sits in the
+  // corner while it works: Pause, Stop, and a running count. Stop keeps what
+  // has been found so far and opens the links panel at once. The same three
+  // are console commands too, for when the bar is out of reach:
+  //   evdPause()   evdResume()   evdStop()
+  const control = { running: true, paused: false, stopped: false };
+  window.evdControl = control;
+
+  const bar = document.createElement('div');
+  bar.id = 'evd-bar';
+  bar.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;'
+    + 'background:#0e1020;color:#e8ecff;border:2px solid #6c7cff;border-radius:12px;'
+    + 'padding:10px 12px;font:13px system-ui;display:flex;gap:10px;align-items:center;'
+    + 'box-shadow:0 10px 30px rgba(0,0,0,.5)';
+  const barText = document.createElement('span');
+  barText.style.cssText = 'min-width:190px';
+  const barBtn = (text, bg) => {
+    const b = document.createElement('button');
+    b.textContent = text;
+    b.style.cssText = 'border:0;border-radius:8px;padding:7px 12px;cursor:pointer;'
+      + 'font:600 12px system-ui;color:#fff;background:' + bg;
+    return b;
+  };
+  const pauseBtn = barBtn('Pause', '#3a4170');
+  const stopBtn = barBtn('Stop', '#b3424a');
+  bar.append(barText, pauseBtn, stopBtn);
+
+  const tally = { done: 0, of: 0, ok: 0, missed: 0, what: 'Collecting' };
+  const showProgress = () => {
+    const state = control.stopped ? 'Stopping…'
+      : control.paused ? 'Paused at ' + tally.done + ' of ' + tally.of
+      : tally.what + ' ' + tally.done + ' of ' + tally.of;
+    barText.textContent = state + (tally.done ? '  ·  ' + tally.ok + ' found, '
+                                   + tally.missed + ' missed' : '');
+    pauseBtn.textContent = control.paused ? 'Resume' : 'Pause';
+    pauseBtn.disabled = stopBtn.disabled = control.stopped;
+  };
+  window.evdPause = () => { if (!control.stopped) control.paused = true; showProgress(); return 'paused'; };
+  window.evdResume = () => { control.paused = false; showProgress(); return 'resumed'; };
+  window.evdStop = () => {
+    control.stopped = true; control.paused = false; showProgress();
+    return 'stopping - the links found so far will open in a moment';
+  };
+  pauseBtn.onclick = () => (control.paused ? window.evdResume() : window.evdPause());
+  stopBtn.onclick = () => window.evdStop();
+
+  const startBar = (what, of) => {
+    Object.assign(tally, { done: 0, of, ok: 0, missed: 0, what });
+    control.running = true; control.paused = false; control.stopped = false;
+    document.body.appendChild(bar);
+    showProgress();
+  };
+  const endBar = () => { bar.remove(); control.running = false; };
+
+  // Before each lesson: hold while paused, and say whether to go on at all.
+  const gate = async () => {
+    while (control.paused && !control.stopped) await wait(250);
+    return !control.stopped;
+  };
 
   const readLesson = (href, patience) => new Promise(resolve => {
     const frame = document.createElement('iframe');
@@ -213,6 +291,12 @@
     document.body.appendChild(frame);
     const deadline = Date.now() + (patience || PATIENCE);
     const timer = setInterval(() => {
+      // Stop means now, not once every page already loading has timed out
+      if (control.stopped) {
+        clearInterval(timer); frame.remove();
+        resolve({ url: null, files: [], why: 'not reached' });
+        return;
+      }
       const last = Date.now() >= deadline;
       let url = null, doc = null, loaded = false;
       try {
@@ -252,8 +336,6 @@
   // One pass over a list of lessons, `atOnce` at a time, filling in whatever
   // it can. Used for the first sweep and for every retry after it, so a
   // second attempt behaves exactly like the first, only more patiently.
-  const wait = ms => new Promise(res => setTimeout(res, ms));
-
   const sweep = async (list, atOnce, patience, tag) => {
     const queue = list.slice();
     let done = 0;
@@ -261,9 +343,11 @@
       async (_unused, n) => {
         await wait(n * STAGGER);       // do not boot them all in one instant
         while (queue.length) {
+          if (!await gate()) break;
           const l = queue.shift();
           const got = l.url ? { url: l.url, files: l.files || [] }
                             : await readLesson(l.href, patience);
+          if (got.why === 'not reached') { l.why = 'not reached'; break; }
           done++;
           if (got.url) {
             l.url = got.url;
@@ -272,6 +356,9 @@
           } else {
             l.why = got.why;
           }
+          tally.done++;
+          tally[got.url ? 'ok' : 'missed']++;
+          showProgress();
           console.log('[evd] %s %s/%s  %s %s %s%s', tag, done, list.length, l.number,
                       l.title.slice(0, 40), got.url ? 'ok' : 'MISSED - ' + got.why,
                       (got.files || []).length ? ' +' + got.files.length + ' file(s)' : '');
@@ -279,21 +366,31 @@
           // gets throttled part way through - the middle of the run comes back
           // empty while the start and the end are fine - and the cure is to
           // ask less often, not to wait longer for an answer that is not coming.
-          if (queue.length) await wait(BREATH);
+          if (queue.length && !control.stopped) await wait(BREATH);
         }
       }));
+    // whatever a stop left untouched is marked, so the panel can offer to
+    // carry on from there instead of starting the whole run again
+    if (control.stopped) {
+      for (const l of list) if (!l.url && !l.why) l.why = 'not reached';
+    }
   };
 
   // a page that loaded and has no player on it will be no different next time
   const stragglers = () => lessons.filter(
-    l => !l.url && l.href && l.why !== 'no player on the page');
+    l => !l.url && l.href && l.why !== 'no player on the page' && l.why !== 'not reached');
+  const unreached = () => lessons.filter(l => !l.url && l.href && l.why === 'not reached');
 
+  startBar('Collecting', lessons.length);
   await sweep(lessons, AT_ONCE, PATIENCE, 'pass 1');
-  if (stragglers().length) {
+  if (stragglers().length && !control.stopped) {
     console.log('[evd] %d did not answer - going round again, slower',
                 stragglers().length);
+    startBar('Second try', stragglers().length);
     await sweep(stragglers(), 2, PATIENCE * 2, 'pass 2');
   }
+  if (control.stopped) console.log('[evd] stopped - showing what was found so far');
+  endBar();
 
   // -- the panel -----------------------------------------------------------
   // Built as a function so a retry can redraw it rather than starting over:
@@ -301,7 +398,7 @@
   // most of an hour for no reason.
   const panel = document.createElement('div');
   panel.id = 'evd-box';
-  panel.style.cssText = 'position:fixed;inset:5% 8%;z-index:2147483647;background:#0e1020;'
+  panel.style.cssText = 'position:fixed;inset:5% 8% 76px 8%;z-index:2147483646;background:#0e1020;'
     + 'color:#e8ecff;border:2px solid #6c7cff;border-radius:14px;padding:16px;'
     + 'font:13px system-ui;display:flex;flex-direction:column;gap:10px;'
     + 'box-shadow:0 20px 60px rgba(0,0,0,.6)';
@@ -324,6 +421,7 @@
   };
   const copy = button('Copy to clipboard', true);
   const again = button('', false);
+  const carry = button('', false);
   copy.onclick = () => {
     box.focus(); box.select(); document.execCommand('copy');
     copy.textContent = 'Copied';
@@ -332,7 +430,10 @@
   const close = button('Close', false);
   close.style.cssText += ';position:absolute;top:10px;right:12px;background:transparent;'
     + 'color:#8b93c7;padding:4px;font-weight:400';
-  close.onclick = () => panel.remove();
+  close.onclick = () => {
+    if (control.running) window.evdStop();     // closing means stop, too
+    panel.remove();
+  };
 
   const render = () => {
     const ordered = lessons.slice().sort(
@@ -366,8 +467,11 @@
       const why = f.why || 'no video found';
       (byReason[why] = byReason[why] || []).push(f.number);
     }
-    const missed = Object.keys(byReason)
-      .map(why => byReason[why].join(', ') + ' (' + why + ')').join('; ');
+    // a long list of numbers says nothing a count does not
+    const missed = Object.keys(byReason).map(why => {
+      const nums = byReason[why];
+      return nums.length > 12 ? nums.length + ' ' + why : nums.join(', ') + ' (' + why + ')';
+    }).join('; ');
 
     heading.innerHTML = '<div style="font-size:16px;font-weight:600">'
       + (lines.length - fileCount) + ' of ' + lessons.length + ' lesson links'
@@ -381,24 +485,42 @@
     again.style.display = left ? '' : 'none';
     again.disabled = false;
     again.textContent = 'Try the ' + left + ' missing again';
+
+    // after a Stop: pick up where it left off, rather than starting over
+    const rest = unreached().length;
+    carry.style.display = rest ? '' : 'none';
+    carry.disabled = false;
+    carry.textContent = 'Carry on with the ' + rest + ' not reached';
   };
 
   again.onclick = async () => {
     const list = stragglers();
-    again.disabled = true;
+    again.disabled = carry.disabled = true;
+    startBar('Retrying', list.length);
     for (let i = 0; i < list.length; i++) {
-      again.textContent = 'Trying ' + (i + 1) + ' of ' + list.length + '…';
+      if (!await gate()) break;
       // one at a time, with the browser to itself and every patience going -
       // this is the pass that gets back what a rate limit took
       await sweep([list[i]], 1, PATIENCE * 3, 'again');
-      await wait(BREATH);
+      if (i < list.length - 1) await wait(BREATH);
     }
+    endBar();
     render();
   };
   window.evdRetryMissed = () => again.onclick();
 
+  carry.onclick = async () => {
+    const list = unreached();
+    for (const l of list) l.why = '';
+    again.disabled = carry.disabled = true;
+    startBar('Collecting', list.length);
+    await sweep(list, AT_ONCE, PATIENCE, 'carry on');
+    endBar();
+    render();
+  };
+
   document.getElementById('evd-box')?.remove();
-  row.append(copy, again);
+  row.append(copy, again, carry);
   panel.append(heading, box, row, close);
   document.body.appendChild(panel);
   render();
