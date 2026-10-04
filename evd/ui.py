@@ -15,6 +15,7 @@ from . import config
 from . import errors
 from . import downloader as D
 from . import pagescan
+from . import combine
 from . import graphics as G
 from . import theme as T
 from . import widgets as WG
@@ -121,6 +122,8 @@ class App:
         self._saved_stage: list[list[str]] | None = None
         self._autosave_ticks = 0
         self._tick_failures = 0
+        self.joiner: combine.Joiner | None = None
+        self._join_seen = False
 
         self.cv.bind("<Configure>", self._on_configure)
         self.root.protocol("WM_DELETE_WINDOW", self.close)
@@ -675,11 +678,26 @@ class App:
                                     icon="x", variant="danger", font=T.f("small"),
                                     command=self.stop_selected,
                                     tooltip="Stop the ticked items")
-        self.b_clear = WG.Button(cv, right - 426, y0 + 10, 104, 32, text="Clear done",
+        # On a narrow window there is not room for every label beside the
+        # QUEUE heading, so Clear done folds to its icon before anything
+        # overlaps.
+        # the item count ("123 items") ends about here; nothing may start
+        # before it
+        count_end = x + 91 + 64
+        narrow = (right - 322 - 104 - 8 - 112) < (count_end + 8)
+        clear_w, comb_w = (40, 40) if narrow else (104, 112)
+        self.b_clear = WG.Button(cv, right - 322 - clear_w, y0 + 10, clear_w, 32,
+                                 text="" if narrow else "Clear done",
                                  icon="trash", variant="subtle", font=T.f("small"),
-                                 command=self.clear_done)
+                                 command=self.clear_done,
+                                 tooltip="Remove finished items from the list")
+        self.b_combine = WG.Button(cv, right - 322 - clear_w - 8 - comb_w, y0 + 10,
+                                   comb_w, 32, text="" if narrow else "Combine",
+                                   icon="film", variant="ghost",
+                                   font=T.f("small"), command=self.combine_videos)
+        self._combine_compact = narrow
         self.widgets += [self.tick_all, self.b_start, self.b_pause_sel,
-                         self.b_stop_sel, self.b_clear]
+                         self.b_stop_sel, self.b_clear, self.b_combine]
         self.b_pause_sel.set_enabled(False)
         self.b_stop_sel.set_enabled(False)
         self.on_selection_change(self.queue.selected_jobs())
@@ -992,6 +1010,7 @@ class App:
             self.b_stop_sel.set_enabled(armed)
         total = len(self.engine.order)
         self.tick_all.set(bool(total) and len(self.queue.selected) == total)
+        self._sync_combine()
 
     def pause_selected(self):
         jobs = self.queue.selected_jobs()
@@ -1014,6 +1033,109 @@ class App:
         self.queue.refresh(force=True)
         self.on_selection_change(self.queue.selected_jobs())
         self.update_stats()
+
+    # -- combining -------------------------------------------------------
+    def _sync_combine(self):
+        """Say what Combine will do, since it does two different things.
+
+        With rows ticked it joins exactly those. With none ticked it is the
+        one-click version: every folder's finished videos, one file each -
+        which, with a folder per course, is one file per course.
+        """
+        b = getattr(self, "b_combine", None)
+        if not b:
+            return
+        if self.joiner and self.joiner.running:
+            label, icon, tip = "Stop", "x", "Stop combining - the finished files are kept"
+        elif self.queue.selected:
+            label, icon = "Combine", "film"
+            tip = "Join the ticked videos into one file, in queue order"
+        else:
+            label, icon = "Combine", "film"
+            tip = ("Join each folder's finished videos into one file. "
+                   "Tick rows first to choose which ones instead")
+        if getattr(self, "_combine_compact", False):
+            label = ""                  # icon only on a narrow window
+        if b.text != label or b.icon_name != icon:
+            b.set_text(label, icon=icon)
+        b.tooltip = tip
+
+    def combine_videos(self):
+        if self.joiner and self.joiner.running:
+            self.joiner.stop()
+            self.flash_footer("Stopping - videos already joined are kept")
+            return
+        ffmpeg = self.engine.ffmpeg
+        if not ffmpeg:
+            self.flash_footer("Combining needs ffmpeg, and none was found")
+            return
+
+        ticked = self.queue.selected_jobs()
+        if ticked:
+            # in the order they sit in the queue, which is the order chosen
+            paths = [j.filepath for j in ticked if j.status == D.DONE and j.filepath]
+            groups = combine.plan_ticked(paths)
+            if not groups:
+                self.flash_footer("Tick at least two finished videos to combine")
+                return
+            g = groups[0]
+            ignored = len(ticked) - len(g.files)
+            detail = "%d videos into:\n%s\n\nin %s" % (
+                len(g.files), os.path.basename(g.output), os.path.dirname(g.output))
+            if ignored:
+                detail += ("\n\n%d ticked item%s left out - not finished, not a "
+                           "video, or no longer on disk."
+                           % (ignored, "" if ignored == 1 else "s"))
+        else:
+            paths = [j.filepath for j in self.engine.all_jobs()
+                     if j.status == D.DONE and j.filepath]
+            groups = combine.plan_by_folder(paths)
+            if not groups:
+                self.flash_footer("Nothing to combine - no folder has two finished "
+                                  "videos. Tick rows to choose instead")
+                return
+            lines = ["• %s — %d videos" % (os.path.basename(g.output), len(g.files))
+                     for g in groups[:8]]
+            if len(groups) > 8:
+                lines.append("• …and %d more" % (len(groups) - 8))
+            detail = "one file per folder:\n\n" + "\n".join(lines)
+
+        ok = messagebox.askokcancel(
+            "Combine videos",
+            "Join %s\n\nEach original becomes a chapter, so you can still jump "
+            "between lessons. The originals are kept.\n\nLessons from one course "
+            "usually match, which makes this a quick copy. If they do not, they "
+            "are re-encoded to match instead - that takes about as long as the "
+            "videos run." % detail,
+            parent=self.root)
+        if not ok:
+            return
+        self.joiner = combine.Joiner(ffmpeg, on_log=self.engine._log)
+        self.joiner.start(groups)
+        self._join_seen = True
+        self._sync_combine()
+        self._stat_sig = None
+        self.update_stats()
+
+    def _watch_join(self):
+        """Called by the timer: report a join when it finishes."""
+        if not self._join_seen or not self.joiner or self.joiner.running:
+            return
+        self._join_seen = False
+        done, failed = self.joiner.done, self.joiner.failed
+        self._sync_combine()
+        self._stat_sig = None
+        if failed and not done:
+            self.flash_footer("Could not combine %s - see Activity for why"
+                              % ", ".join(failed))
+        elif failed:
+            self.flash_footer("Combined %d, could not combine %s - see Activity"
+                              % (len(done), ", ".join(failed)))
+        elif done:
+            self.flash_footer("Combined into %s" % (
+                os.path.basename(done[0]) if len(done) == 1 else "%d files" % len(done)))
+        else:
+            self.flash_footer("Combining stopped")
 
     def toggle_run(self):
         if self.engine.running and self.engine.counts()["active"]:
@@ -1081,7 +1203,8 @@ class App:
         speed = self.engine.total_speed()
         sig = (counts["total"], counts[D.QUEUED], counts["active"], counts[D.DONE],
                counts[D.ERROR], counts[D.CANCELED], counts[D.PAUSED], counts[D.HELD],
-               int(speed / 50000), self.engine.running, len(self.queue.selected))
+               int(speed / 50000), self.engine.running, len(self.queue.selected),
+               self.joiner.status if self.joiner and self.joiner.running else "")
         if sig == self._stat_sig:
             return
         self._stat_sig = sig
@@ -1112,6 +1235,8 @@ class App:
         state = "Running" if self.engine.running else "Paused"
         if not self.engine.exe:
             state = "yt-dlp not found"
+        if self.joiner and self.joiner.running and self.joiner.status:
+            state = "Combining " + self.joiner.status
         self.cv.itemconfigure(self.footer_right, text=state)
         self.cv.itemconfigure(self.speed_item, text=D.human_speed(speed) if speed else "")
 
@@ -1163,8 +1288,14 @@ class App:
         self.update_stats()
         if self.log_window and self.log_window.alive():
             self.log_window.pump()
+        self._watch_join()
 
     def close(self):
+        if self.joiner and self.joiner.running:
+            try:
+                self.joiner.stop_and_wait()
+            except Exception:
+                errors.log(*sys.exc_info(), note="closing - stopping a join")
         if getattr(self, "_tick_after", None):
             try:
                 self.root.after_cancel(self._tick_after)

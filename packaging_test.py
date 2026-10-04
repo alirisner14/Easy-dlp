@@ -7,6 +7,7 @@ release build carries both inside it; a build from source does not, and falls
 back to PATH, which is what you want while developing.
 """
 import os
+import shutil
 import sys
 import tempfile
 
@@ -45,6 +46,8 @@ class Frozen:
         return self
 
     def __exit__(self, *exc):
+        # tidy up: every run used to leave a folder behind in %TEMP%
+        shutil.rmtree(self.dir, ignore_errors=True)
         meipass, frozen = self.kept
         if meipass is None:
             del sys._MEIPASS

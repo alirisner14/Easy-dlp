@@ -37,6 +37,7 @@ failed. Run them from the project root.
 | `resume_test.py` | a restart keeps part-finished downloads |
 | `pagescan_test.py` | a course page yields every lesson, named and numbered |
 | `layout_test.py` | the left column's cards are as tall as what is drawn on them, so nothing is clipped |
+| `combine_test.py` | joining finished videos: course order, chapters, sound in step, a clean stop, and room in the toolbar |
 | `clip_test.py` | a typed time range fetches only that part, is named for it, and survives a restart |
 | `version_test.py` | the version in the code, the changelog and the git tag all agree |
 | `packaging_test.py` | a release build finds the yt-dlp and ffmpeg it carries, rather than needing them on PATH |
@@ -82,6 +83,7 @@ again. Breaking it silently wastes gigabytes, so `resume_test.py` guards it.
 | `evd/queueview.py` | the queue rows, pooled and redrawn only when dirty |
 | `evd/downloader.py` | the engine: job queue, scheduler, yt-dlp process handling |
 | `evd/pagescan.py` | turns a copied course page into staged rows |
+| `evd/combine.py` | joins finished videos into one file, with a chapter per piece |
 | `evd/widgets.py` | buttons, fields, selects and tooltips drawn on a canvas |
 | `evd/graphics.py` | the frosted glass compositing, via Pillow |
 | `evd/theme.py` | colours, fonts, spacing |

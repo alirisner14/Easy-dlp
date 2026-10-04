@@ -272,6 +272,37 @@ generic extractor, so nothing changes for a direct media link.
 | `Failed to decrypt with DPAPI` | the Chrome cookie problem above |
 | dies part way to a network drive | usually the share dropping out; check Activity and keep Parallel low |
 
+## Combining videos into one
+
+**Combine**, in the queue toolbar, joins finished videos into a single file.
+It works two ways:
+
+- **Tick the rows you want** and press Combine. Exactly those are joined, in
+  the order they sit in the queue. This is the way for a batch that mixes
+  several courses, where only you know which pieces belong together — a
+  section, a run of lessons, a handful of clips.
+- **Tick nothing** and press Combine. Each folder's finished videos are joined
+  into one file of their own, in lesson order. With a folder per course, that
+  is one video per course in one click.
+
+A confirmation shows what will be made before anything starts. Every original
+becomes a **chapter** in the joined file, titled from its name, so any player
+that shows chapters can still jump lesson to lesson. The originals are never
+touched.
+
+Lessons from one course are nearly always encoded alike, and then the join is
+a straight copy: fast, and not one pixel changes. When the pieces differ — a
+lesson in another size, audio at another rate, a clip with no sound — they are
+re-encoded to match the first, letterboxed rather than stretched, with the
+sound kept in step. That takes about as long as the videos run, and the
+confirmation says so.
+
+The joined file goes beside the originals: `Course - Complete.mp4` for a
+whole folder, `Course (1.03-1.15).mp4` for a ticked run. An earlier join is
+never overwritten. Progress shows at the bottom right; press the button again
+(it reads **Stop** while working) to cancel, and nothing half-made is left
+behind — closing the window does the same.
+
 ## Nothing is lost
 
 Three things are kept on disk so a closed window, a crash or a failed batch

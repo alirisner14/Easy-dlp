@@ -17,6 +17,25 @@ will.
 
 ### Added
 
+- **Combine finished videos into one file, two ways.** Tick rows and Combine
+  joins exactly those, in queue order - for batches that mix courses, where
+  only the person downloading knows what belongs together. Tick nothing and
+  it joins each folder's videos into one file per folder, which with a folder
+  per course is one click per course. Every original becomes a chapter, so the
+  joined file can still be navigated lesson by lesson, and the originals are
+  kept.
+
+  Matching pieces are joined by stream copy: fast and lossless. Pieces that
+  differ go through ffmpeg's concat filter instead of its concat demuxer,
+  because the demuxer misplaced the sound by a second when a 48 kHz lesson sat
+  among 44.1 kHz ones; the filter normalises each piece on its own and keeps
+  every segment in step. A lesson with no sound gets silence of its own
+  length, so later lessons do not slide out of sync. Checked against real
+  files on both paths: five pieces totalling 13 s came out at 13.00 s of
+  picture and 13.00 s of sound, chapter boundaries on the second.
+
+  Stopping, or closing the window, mid-join removes the half-written file.
+
 - **Download part of a video.** Type a range after the link -
   `https://... 1:30-5:00` - and only that stretch is fetched, rather than the
   whole recording followed by a trim in another program. Either end may be

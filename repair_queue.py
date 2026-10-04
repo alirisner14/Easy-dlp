@@ -21,7 +21,8 @@ from evd import paths
 
 QUEUE = paths.queue_file()
 WORK = paths.work_root()
-BACKUP_DIR = os.path.join(os.path.expanduser("~"), "Documents", "EVD-queue-backup")
+# beside the queue it backs up, not in Documents where it is clutter
+BACKUP_DIR = os.path.join(os.path.dirname(QUEUE), "backups")
 apply_it = "--apply" in sys.argv
 
 
