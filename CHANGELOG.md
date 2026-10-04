@@ -13,7 +13,7 @@ checks that the number in `evd/__init__.py`, the newest heading here, and the
 newest tag all agree, because three places that can disagree eventually
 will.
 
-## Unreleased
+## 1.3.0 - 2026-10-04
 
 ### Added
 
