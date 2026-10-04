@@ -102,5 +102,5 @@ the product.
 
 ## Easy-dlp itself
 
-Copyright © 2026 [LEGAL NAME], trading as On the Rise Digital.
+Copyright © 2026 Alison Risner, trading as On the Rise Digital.
 All rights reserved. Licensed, not sold — see [EULA.md](EULA.md).

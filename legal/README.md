@@ -1,149 +1,172 @@
-# What is in here, and what still needs doing
+# Legal and release documents
 
-Drafts of the documents Easy-dlp needs before it can be sold. They are
-written to be read by a normal person, cover what these documents usually
-cover, and say what you asked them to say.
+Drafts for **On the Rise Digital** (Alison Risner) as a software publisher.
+Written as templates — `[PRODUCT]` where a product name goes — so the same
+set serves the next thing you release, not only Easy-dlp.
 
-**They are not legal advice and I am not a lawyer.** They are a solid starting
-point that will save you most of a lawyer's billable time, not a substitute
-for one. Four items below have real legal constraints; each has a fix.
+**They are not legal advice and I am not a lawyer.** They cover what these
+documents usually cover and should cut a lawyer's review to about an hour,
+which is the one line on either checklist worth paying for.
+
+---
+
+## Which set do I need?
+
+```
+legal/
+├── shared/     every route needs these
+├── direct/     your own site, or a marketplace like Fourthwall or Gumroad
+└── store/      Microsoft Store
+```
+
+| | Direct | Store |
+|---|---|---|
+| EULA | ✅ | ✅ (optional — Microsoft's applies if you supply none) |
+| Terms of Use | ✅ | ✅ |
+| Privacy Policy | ✅ | ✅ **required at a public URL** |
+| Third-party licences | ✅ | ✅ |
+| **Terms of Sale** | ✅ | ❌ Microsoft is the seller |
+| **Refund Policy** | ✅ | ❌ Microsoft's applies |
+| **Website Terms** | ✅ | ❌ |
+| **Cookie Notice** | ✅ | ❌ |
+| **Support Policy** | ✅ | recommended |
+| **Install instructions** | ✅ | ❌ no SmartScreen warning on a Store install |
+| Code-signing certificate | $0–500/yr | ❌ free |
+| Sales tax handling | your provider's, or yours | Microsoft's |
+
+**Selling direct makes you the merchant.** That is where the extra documents
+come from — not bureaucracy, but the fact that you are now the one taking
+money, delivering goods, handling refunds and answering for tax.
+
+## Start here
+
+- Selling direct → **`direct/CHECKLIST.md`**
+- Microsoft Store → **`store/CHECKLIST.md`**
+- Deciding between them → `../RELEASING.md`
+
+## The files
+
+### `shared/` — both routes
 
 | File | Goes where |
 |---|---|
-| `EULA.md` | shown by the installer, installed beside the app, linked from About |
-| `TERMS.md` | installed beside the app, published on your site |
-| `PRIVACY.md` | **must be at a public URL** — required by the Microsoft Store |
-| `THIRD-PARTY-LICENCES.md` | installed beside the app, linked from About |
-| `licences/` | full licence texts — create this folder before release |
+| `EULA.md` | installer, install folder, linked from About |
+| `TERMS-OF-USE.md` | install folder, published |
+| `PRIVACY-POLICY.md` | **public URL** |
+| `THIRD-PARTY-LICENCES.md` | install folder, About box — a licence condition |
 
-## Fill these in everywhere
+### `direct/` — your own site or a marketplace
 
-`[LEGAL NAME]` · `[SUPPORT EMAIL]` · `[WEBSITE]` · `[STATE]` · `[DATE]` ·
-`[VERSION]`
+| File | Goes where |
+|---|---|
+| `TERMS-OF-SALE.md` | published, linked from checkout |
+| `REFUND-POLICY.md` | published, linked from checkout **and** product page |
+| `WEBSITE-TERMS.md` | published |
+| `COOKIE-NOTICE.md` | published — pick version A or B |
+| `SUPPORT-POLICY.md` | published |
+| `INSTALL.md` | download page, confirmation email, `READ-ME-FIRST.txt` |
+| `CHECKLIST.md` | you |
+
+### `store/` — Microsoft Store
+
+| File | What it is |
+|---|---|
+| `SUBMISSION.md` | what the Store needs, and what it saves you |
+| `CHECKLIST.md` | you |
+
+## Fill these in
+
+`[SUPPORT EMAIL]` · `[WEBSITE]` · `[STATE]` · `[DATE]` · `[PRODUCT]` ·
+`[PROVIDER]` · `[VERSION]` · `[CURRENCY]`
 
 ```bash
-grep -rn "\[LEGAL NAME\]\|\[SUPPORT EMAIL\]\|\[WEBSITE\]\|\[STATE\]\|\[DATE\]\|\[VERSION\]" legal/
+grep -rn "\[SUPPORT EMAIL\]\|\[WEBSITE\]\|\[STATE\]\|\[DATE\]\|\[PRODUCT\]\|\[PROVIDER\]\|\[VERSION\]\|\[CURRENCY\]" legal/
 ```
 
-Run that again before every release. A published document with `[DATE]` in it
-undermines the rest of it.
+Run it before every release. A published document with `[DATE]` in it
+undermines everything else on the page.
 
 ---
 
-## The four things that need a decision
+## Decisions that affect every document
 
 ### 1. "No refunds" is not enforceable everywhere
 
-**The problem.** A flat no-refunds policy is void against consumers in the EU
-and UK, who have a statutory 14-day right to cancel. It also does not bind
-the Microsoft Store, which applies its own policy regardless of yours, and it
-does not stop a card chargeback — losing one of those costs you the sale
-*plus* a fee, and a pattern of them puts your payment account at risk.
+A flat no-refunds policy is void against EU and UK consumers, who have a
+statutory 14-day right to cancel. It does not bind the Microsoft Store, and
+it does not stop a chargeback — one of those costs you the sale plus a fee,
+and a pattern of them endangers your payment account.
 
-**The fix, already written into section 9 of the EULA:** keep "all sales are
-final" as the default, and carve out the cases where the law overrides you.
-Then add the one clause that actually protects you — at checkout, get the
-buyer to tick a box saying they request immediate delivery and understand
-they lose the right to cancel once the download starts. That tick is what
-makes the EU/UK carve-out close again. Paddle, Lemon Squeezy and Gumroad all
-support this; it is usually a setting called "digital goods" or "waive
-withdrawal right".
+**What is written instead:** "all sales are final" as the default, with
+carve-outs where law overrides. Then the clause that actually works — **at
+checkout, the buyer ticks a box requesting immediate delivery and
+acknowledging they lose the right to cancel.** That tick closes the EU/UK gap
+properly. Lemon Squeezy, Paddle and Gumroad all support it, usually as
+"digital goods" or "waive withdrawal right".
 
-**Also worth doing:** offer a goodwill refund quietly for the first few
-months. A refunded customer costs you one sale. A chargeback costs you the
-sale, a fee, and a mark against your merchant account.
+Offer goodwill refunds quietly for the first few months regardless. A refund
+costs one sale; a chargeback costs the sale, a fee, and a mark against your
+merchant account.
 
 ### 2. "On the Rise Digital" is not a legal entity
 
-**The problem.** Trading under a name that is not registered creates three
-issues. You have no liability shield — a claim lands on you personally, your
-savings included, and the limitation-of-liability clause is a contract term,
-not armour. Most US states require a DBA ("fictitious business name")
-registration before you can lawfully trade under a name that is not your own,
-and some require it before a bank will open an account in that name. And the
-Microsoft Store **Company** account needs a verifiable registered business —
-which you would not pass.
+Three consequences: no liability shield, so a claim reaches you personally
+and the limitation-of-liability clause is a contract term rather than armour;
+most US states require a DBA registration to trade under a name that is not
+your own; and the Store **Company** account needs a verifiable registered
+business, which you would not pass.
 
-**The fix, cheapest first:**
+**Options, cheapest first:**
 
-- **Register a DBA** with your county or state. Typically $10–100 and a form.
-  This legitimises the trading name and is usually enough to take payments
-  under it. It gives you **no** liability protection.
-- **Form a single-member LLC** when revenue justifies it — $50–500 depending
-  on state, plus an annual fee. This is what actually separates your personal
-  assets from the business. For a product that ships to strangers and touches
-  copyright questions, it is the right answer sooner rather than later.
-- **In the meantime**, sell under your own legal name with "On the Rise
-  Digital" as a brand, and put your real name in the EULA as the contracting
-  party. That is lawful and honest; the drafts are already written this way,
-  which is why `[LEGAL NAME]` appears and not just the brand.
+- **DBA** with your county or state — $10–100 and a form. Legitimises the
+  trading name, usually enough to bank under it. **No** liability protection.
+- **Single-member LLC** — $50–500 plus an annual fee. This is what actually
+  separates personal assets from the business. For a product that ships to
+  strangers and touches copyright questions, it is the right answer sooner
+  rather than later.
+- **Meanwhile:** sell under your own legal name with "On the Rise Digital" as
+  the brand. The documents already contract as *Alison Risner, trading as On
+  the Rise Digital*, which is lawful and accurate today.
 
-On the Store account question specifically: if you are not a registered
-entity, you cannot pass Company verification — but Microsoft describes
-Individual accounts as for distribution *not* in relation to a business or
-profession, which selling does not fit. **Resolve the entity question before
-you register the Store account**, because Partner Center cannot convert an
-Individual account into a Company one later.
+**Settle this before registering a Store account** — Partner Center cannot
+convert Individual to Company later.
 
-### 3. "No commercial use" needs to say which thing is restricted
+### 3. "No commercial use" had to be narrowed
 
-**The problem.** As a bare phrase it is ambiguous in a way that will cost you
-sales and create disputes. A freelance illustrator buys Easy-dlp to download
-a course they paid for, and uses what they learn in paid work. Have they
-breached it? Under a literal reading, arguably yes — which is almost
-certainly not what you meant, and is a term you would never actually enforce.
+As a bare phrase it is ambiguous enough to backfire. A freelance illustrator
+buys the software, downloads a course they paid for, uses what they learned
+in paid work — breach? Literally, arguably yes, which is not what you meant
+and is not a term you would enforce.
 
-**The fix, already written into clause 3.1:** restrict commercial use *of the
-Software*, not of what the user does afterwards. The clause now says you may
-not run it on someone else's behalf or as part of a service you charge for,
-and states explicitly that using downloaded material for your own work is not
-restricted. That keeps what you want — nobody building a download service on
-your tool — and drops what you do not.
+**What is written instead:** EULA §3.1 restricts commercial use **of the
+software** — no running it on another person's behalf, no building a paid
+service on it — and says explicitly that using downloaded material for your
+own work is not restricted.
 
-### 4. The first-run warning is not a legal document
+### 4. The first-run warning is a support problem, not a clause
 
-**The problem.** You listed it with the legal items, but a SmartScreen
-warning is a support issue, and burying the instructions in an EULA means
-nobody reads them. A customer who hits "Windows protected your PC" with no
-warning assumes they have been sold malware and asks for a refund.
+Buried in an EULA, nobody reads it, and a customer meeting *"Windows
+protected your PC"* cold concludes they bought malware.
 
-**The fix:** tell them *before* they see it, in three places — the purchase
-confirmation email, the download page, and a `READ-ME-FIRST.txt` in the
-download. `INSTALL.md` in this folder is written to be used for all three.
-Saying it first turns an alarming moment into an expected one.
+**What is written instead:** `direct/INSTALL.md`, for the confirmation email,
+the download page and a `READ-ME-FIRST.txt`. Explains that SmartScreen is a
+popularity check rather than a virus scan, gives the two clicks, and offers a
+SHA-256 and VirusTotal for anyone who would rather verify than trust.
+
+**Store route only:** delete this concern. A Store install never warns.
 
 ---
 
-## Also worth adding, which you did not list
+## Also worth having
 
-- **A warranty-period statement.** Not required, but "if it does not work on
-  a supported system within 30 days, we will fix it or refund you" converts
-  far better than silence, and costs little when the software works.
-- **Supported systems, stated plainly.** Windows 10 1809 or later, 64-bit.
-  Without this, "it does not work" on Windows 8 becomes your problem.
-- **What happens when a site breaks it.** Section 7 of the Terms says you do
-  not guarantee it keeps working. Say the same on the sales page, in friendly
-  words, before the purchase rather than after.
-- **An export-control line**, if you sell internationally: that the buyer is
-  not in a sanctioned country and is not on a denied-parties list. One
-  sentence, standard, and your payment provider may require it.
-- **Accessibility statement.** You built this partly for your own vision.
-  Saying so on the sales page is honest, is a genuine differentiator, and is
-  the best answer to anyone asking what the tool is for.
-
-## Before you publish
-
-```
-[ ] every [PLACEHOLDER] replaced, grep clean
-[ ] entity question decided (own name, DBA, or LLC) and EULA names it
-[ ] refund carve-out matched to what your payment provider actually does
-[ ] checkout has the "immediate delivery, waive cancellation" tick
-[ ] PRIVACY.md live at a public URL, and that URL in Partner Center
-[ ] licences/ holds the full texts, versions confirmed against the build
-[ ] FFmpeg build verified LGPL, not GPL — ffmpeg -version, no --enable-gpl
-[ ] a lawyer has read the EULA and Terms at least once
-```
-
-That last line is the one worth spending money on. An hour of a software
-lawyer's time against these drafts costs a few hundred dollars and is cheaper
-than any one thing that goes wrong without it.
+- **A short warranty statement.** "If it does not work on a supported system
+  within 30 days, we fix it or refund you" converts well and costs little
+  when the software works.
+- **Supported systems, stated plainly**, so "it does not work" on Windows 8
+  is not your problem.
+- **What happens when a third-party service breaks it** — say it on the sales
+  page, in friendly words, before the purchase rather than after.
+- **An export-control line** for international sales. One sentence, standard;
+  your payment provider may require it.
+- **An accessibility note** where it applies. Honest, a real differentiator,
+  and the best answer to anyone asking what a tool is for.

@@ -67,7 +67,7 @@ unlawful activity, and we are not responsible for how you use them.**
 
 We supply a general-purpose tool. We do not monitor what you download — we
 cannot, because nothing is reported back to us (see the
-[Privacy Policy](PRIVACY.md)). We have no way to know, and no desire to know,
+[Privacy Policy](PRIVACY-POLICY.md)). We have no way to know, and no desire to know,
 what you point it at.
 
 That cuts both ways. Because you alone decide what to use it on, **you alone

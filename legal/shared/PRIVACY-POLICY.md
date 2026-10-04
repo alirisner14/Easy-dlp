@@ -139,6 +139,6 @@ started collecting something, we would say so plainly and ask first.
 
 ## 12. Contact
 
-[LEGAL NAME], trading as On the Rise Digital
+Alison Risner, trading as On the Rise Digital
 [SUPPORT EMAIL]
 [WEBSITE]

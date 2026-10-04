@@ -4,16 +4,17 @@
 Published by On the Rise Digital
 Version 1.1.0 — last updated [DATE]
 
-> **Fill in before publishing:** `[LEGAL NAME]`, `[SUPPORT EMAIL]`,
-> `[WEBSITE]`, `[STATE]`. Every one of them appears below. See
-> `legal/README.md` for what still needs a lawyer's eye.
+> **Template.** Fill in `[SUPPORT EMAIL]`, `[WEBSITE]`, `[STATE]` and
+> `[DATE]` before publishing. Used by both distribution routes — see
+> `../store/SUBMISSION.md` for the three sections that must change if you
+> supply this to the Microsoft Store.
 
 ---
 
 ## 1. This is an agreement
 
 This End User Licence Agreement ("Agreement") is between you ("you") and
-[LEGAL NAME], trading as On the Rise Digital ("we", "us"), covering the
+Alison Risner, trading as On the Rise Digital ("we", "us"), covering the
 software called Easy-dlp, including its updates, documentation and the
 helper scripts supplied with it ("the Software").
 
