@@ -23,6 +23,9 @@ from dataclasses import dataclass, field
 CREATE_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
 
 VIDEO_EXT = (".mp4", ".mkv", ".webm", ".mov", ".m4v", ".ts")
+# Audio-only downloads, joined the same way: a course's talks as one long
+# MP3, a ticked handful of lectures as an audiobook with chapters.
+AUDIO_EXT = (".mp3", ".m4a", ".aac", ".opus", ".ogg", ".flac", ".wav")
 
 _DURATION = re.compile(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)")
 _VIDEO = re.compile(r"Stream #\S+.*?Video:\s*(\w+).*?(\d{2,5})x(\d{2,5})")
@@ -49,18 +52,34 @@ class Info:
         """What has to match for the pieces to be joined without re-encoding."""
         return (self.vcodec, self.width, self.height, self.acodec, self.rate, self.layout)
 
+    @property
+    def sound(self) -> tuple:
+        """The same, for audio alone. An MP3's embedded cover shows up as a
+        "video" stream, and must not make two identical tracks look different."""
+        return (self.acodec, self.rate, self.layout)
+
 
 @dataclass
 class Group:
-    """One output file and the videos that go into it, in order."""
+    """One output file and the pieces that go into it, in order."""
     files: list[str]
     output: str
     infos: list[Info] = field(default_factory=list)
+    kind: str = "video"                  # or "audio" - never both in one group
 
     @property
     def copy(self) -> bool:
         """True when every piece matches, so the join is a lossless copy."""
-        return bool(self.infos) and len({i.shape for i in self.infos}) == 1
+        if not self.infos:
+            return False
+        if self.kind == "audio":
+            # A FLAC file's header states its own length, and a stream copy
+            # keeps the first track's: the join plays nine minutes and claims
+            # three. Re-encoding FLAC is lossless and quick, so it always is.
+            if self.output.lower().endswith(".flac"):
+                return False
+            return all(i.acodec for i in self.infos) and len({i.sound for i in self.infos}) == 1
+        return len({i.shape for i in self.infos}) == 1
 
     @property
     def duration(self) -> float:
@@ -120,8 +139,15 @@ def natural_key(path: str):
     return [int(part) if part.isdigit() else part for part in _NATURAL.split(name)]
 
 
+def kind_of(path: str) -> str:
+    """"video", "audio", or "" for anything that is neither - a worksheet,
+    a brush set - and so never goes into a join."""
+    ext = os.path.splitext(path)[1].lower()
+    return "video" if ext in VIDEO_EXT else "audio" if ext in AUDIO_EXT else ""
+
+
 def is_video(path: str) -> bool:
-    return os.path.splitext(path)[1].lower() in VIDEO_EXT
+    return kind_of(path) == "video"
 
 
 def _free(path: str) -> str:
@@ -135,20 +161,28 @@ def _free(path: str) -> str:
     return "%s (%d)%s" % (stem, n, ext)
 
 
-def output_for(files: list[str], whole_folder: bool) -> str:
+def output_for(files: list[str], whole_folder: bool, kind: str = "video") -> str:
     """Where the joined file goes, and what it is called.
 
     Beside the first piece. A whole folder becomes "<Folder> - Complete"; a
     hand-picked run of numbered lessons is named for its range,
     "<Folder> (1.03-1.15)", so two different picks from one course do not
-    collide; anything else is "<Folder> - Joined".
+    collide; anything else is "<Folder> - Joined". Video and audio from one
+    folder end in different extensions, so they never collide either.
     """
     folder = os.path.dirname(files[0])
     title = os.path.basename(folder.rstrip("\\/")) or "Joined"
     exts = {os.path.splitext(f)[1].lower() for f in files}
-    ext = exts.pop() if len(exts) == 1 else ".mkv"
-    if ext not in (".mp4", ".mkv", ".webm", ".mov"):
-        ext = ".mkv"            # a container that will hold whatever was copied in
+    if kind == "audio":
+        # the pieces' own format when they agree; otherwise the first one's,
+        # which is what a re-encode will produce
+        ext = exts.pop() if len(exts) == 1 else os.path.splitext(files[0])[1].lower()
+        if ext == ".aac":
+            ext = ".m4a"        # bare AAC cannot carry chapters; M4A can
+    else:
+        ext = exts.pop() if len(exts) == 1 else ".mkv"
+        if ext not in (".mp4", ".mkv", ".webm", ".mov"):
+            ext = ".mkv"        # a container that will hold whatever was copied in
     if whole_folder:
         name = "%s - Complete" % title
     else:
@@ -160,28 +194,39 @@ def output_for(files: list[str], whole_folder: bool) -> str:
 
 
 def plan_ticked(paths: list[str]) -> list[Group]:
-    """Exactly the ticked videos, in the order they sit in the queue."""
-    files = [p for p in paths if is_video(p) and os.path.isfile(p)]
-    if len(files) < 2:
-        return []
-    return [Group(files=files, output=output_for(files, whole_folder=False))]
+    """Exactly the ticked pieces, in the order they sit in the queue.
+
+    Ticked video and ticked audio are joined separately - one file each -
+    rather than refused, so ticking a whole batch that mixes both still does
+    what was meant.
+    """
+    groups = []
+    for kind in ("video", "audio"):
+        files = [p for p in paths if kind_of(p) == kind and os.path.isfile(p)]
+        if len(files) >= 2:
+            groups.append(Group(files=files, kind=kind,
+                                output=output_for(files, whole_folder=False, kind=kind)))
+    return groups
 
 
 def plan_by_folder(paths: list[str]) -> list[Group]:
     """One file per folder - which, set up one folder per course, is one per course.
 
     Ordered by name, since the numbered names sort into course order. A folder
-    with a single video has nothing to join and is left out.
+    holding both video and audio gets one of each. A folder with a single
+    piece of a kind has nothing to join and is left out.
     """
-    by_folder: dict[str, list[str]] = {}
+    by_folder: dict[tuple[str, str], list[str]] = {}
     for p in paths:
-        if is_video(p) and os.path.isfile(p):
-            by_folder.setdefault(os.path.dirname(p), []).append(p)
+        kind = kind_of(p)
+        if kind and os.path.isfile(p):
+            by_folder.setdefault((os.path.dirname(p), kind), []).append(p)
     groups = []
-    for folder in sorted(by_folder):
-        files = sorted(set(by_folder[folder]), key=natural_key)
+    for folder, kind in sorted(by_folder):
+        files = sorted(set(by_folder[(folder, kind)]), key=natural_key)
         if len(files) >= 2:
-            groups.append(Group(files=files, output=output_for(files, whole_folder=True)))
+            groups.append(Group(files=files, kind=kind,
+                                output=output_for(files, whole_folder=True, kind=kind)))
     return groups
 
 
@@ -217,6 +262,69 @@ def _write_lists(group: Group, work: str) -> tuple[str, str]:
     return listing, meta
 
 
+# Encoders for an audio re-encode, by the format being made. Chosen so the
+# second encode is inaudible rather than small: these are already-compressed
+# recordings, and joining them should not cost anything you can hear.
+_AUDIO_CODEC = {
+    ".mp3": ["-c:a", "libmp3lame", "-q:a", "0"],         # VBR V0
+    ".m4a": ["-c:a", "aac", "-b:a", "256k"],
+    ".opus": ["-c:a", "libopus", "-b:a", "160k"],
+    ".ogg": ["-c:a", "libvorbis", "-q:a", "7"],
+    ".flac": ["-c:a", "flac"],
+    ".wav": ["-c:a", "pcm_s16le"],
+}
+# WAV has nowhere to put chapters, and asking for them makes ffmpeg refuse
+_NO_CHAPTERS = (".wav",)
+
+
+def _load_filter(ffmpeg_path: str, script: str) -> list[str]:
+    # ffmpeg 7 replaced -filter_complex_script with "-/filter_complex <file>",
+    # and 9 removed the old spelling; the bundled build could be either
+    return (["-/filter_complex", script] if ffmpeg_major(ffmpeg_path) >= 7
+            else ["-filter_complex_script", script])
+
+
+def _audio_args(ffmpeg: str, group: Group, listing: str, meta: str, out: str,
+                work: str) -> list[str]:
+    """The middle of an audio join: inputs, joining, chapters, encoder.
+
+    Matching tracks - the usual case, a batch downloaded with one setting -
+    are copied, so the join is instant and nothing is re-encoded. Tracks that
+    differ are each brought to the first one's sample rate and to stereo,
+    then joined and encoded once, in the first one's format.
+    """
+    ext = os.path.splitext(out)[1].lower()
+    chapters = ext not in _NO_CHAPTERS
+    if group.copy:
+        args = ["-f", "concat", "-safe", "0", "-i", listing]
+        if chapters:
+            args += ["-i", meta, "-map_metadata", "1", "-map_chapters", "1"]
+        # audio only: an MP3's embedded cover art would otherwise come along
+        # as a one-frame "video" stream
+        return args + ["-map", "0:a:0", "-c", "copy"]
+
+    # Opus only runs at 48 kHz (or lower fractions of it), whatever the
+    # first track was recorded at
+    rate = "48000" if ext == ".opus" else (group.infos[0].rate or "44100")
+    count = len(group.infos)
+    inputs: list[str] = []
+    for info in group.infos:
+        inputs += ["-i", info.path]
+    parts = ["[%d:a:0]aresample=%s,aformat=channel_layouts=stereo[a%d]" % (n, rate, n)
+             for n in range(count)]
+    parts.append("%sconcat=n=%d:v=0:a=1[a]"
+                 % ("".join("[a%d]" % n for n in range(count)), count))
+    script = os.path.join(work or os.path.dirname(meta), "filter.txt")
+    with open(script, "w", encoding="utf-8") as fh:
+        fh.write(";\n".join(parts))
+
+    args = inputs + (["-i", meta] if chapters else [])
+    args += _load_filter(ffmpeg, script) + ["-map", "[a]"]
+    if chapters:
+        args += ["-map_metadata", str(count), "-map_chapters", str(count)]
+    return args + _AUDIO_CODEC.get(ext, _AUDIO_CODEC[".m4a"])
+
+
 def command(ffmpeg: str, group: Group, listing: str, meta: str, out: str,
             work: str = "") -> list[str]:
     """The ffmpeg command for one join.
@@ -229,8 +337,15 @@ def command(ffmpeg: str, group: Group, listing: str, meta: str, out: str,
     a second in testing - while the filter keeps every segment in step.
     """
     head = [ffmpeg, "-hide_banner", "-nostats", "-y"]
-    tail = (["-movflags", "+faststart"] if out.lower().endswith((".mp4", ".mov")) else [])
+    lower = out.lower()
+    tail = (["-movflags", "+faststart"] if lower.endswith((".mp4", ".mov", ".m4a")) else [])
+    # ID3v2.3 is what Windows Explorer and most car stereos actually read;
+    # ffmpeg's default 2.4 hides the chapters and tags from them
+    tail += (["-id3v2_version", "3"] if lower.endswith(".mp3") else [])
     tail += ["-progress", "pipe:1", out]
+
+    if group.kind == "audio":
+        return head + _audio_args(ffmpeg, group, listing, meta, out, work) + tail
 
     if group.copy:
         return head + ["-f", "concat", "-safe", "0", "-i", listing,
@@ -277,11 +392,7 @@ def command(ffmpeg: str, group: Group, listing: str, meta: str, out: str,
     with open(script, "w", encoding="utf-8") as fh:
         fh.write(graph)
 
-    # ffmpeg 7 replaced -filter_complex_script with "-/filter_complex <file>",
-    # and 9 removed the old spelling; the bundled build could be either
-    load = (["-/filter_complex", script] if ffmpeg_major(ffmpeg) >= 7
-            else ["-filter_complex_script", script])
-    return head + inputs + load + [
+    return head + inputs + _load_filter(ffmpeg, script) + [
         "-map", "[v]", "-map", "[a]",
         "-map_metadata", str(meta_index), "-map_chapters", str(meta_index),
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",

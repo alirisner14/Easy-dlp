@@ -13,6 +13,26 @@ checks that the number in `evd/__init__.py`, the newest heading here, and the
 newest tag all agree, because three places that can disagree eventually
 will.
 
+## Unreleased
+
+### Added
+
+- **Combine joins audio too.** Tracks downloaded as Audio only join the same
+  two ways as video - ticked, or one file per folder - into one MP3, M4A,
+  Opus, FLAC, Ogg or WAV, with a chapter per track where the format can hold
+  one (MP3, M4A and Opus can; FLAC, Ogg and WAV cannot, and join without).
+  Video and audio never go into the same file: ticking both makes one of
+  each, and a folder holding both gets one of each.
+
+  Matching tracks are copied, so the join is instant. MP3s carrying cover art
+  are compared on their sound alone, since the art shows up as a one-frame
+  video stream and would otherwise make identical tracks look different.
+  FLAC is always re-encoded, losslessly: its header states its own length,
+  and a stream copy kept the first track's, so a nine-minute join claimed
+  three. Opus is resampled to 48 kHz when re-encoded, the only rates it
+  supports. Joined MP3s are written with ID3v2.3, which Windows Explorer and
+  most car stereos read where they ignore ffmpeg's default 2.4.
+
 ## 1.2.0 - 2026-10-04
 
 ### Added

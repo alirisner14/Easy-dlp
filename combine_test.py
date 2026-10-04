@@ -160,7 +160,84 @@ else:
     ok(not os.path.exists(groups[0].output), "and no half-made output under the real name")
     shutil.rmtree(ROOT)
 
-print("5. the toolbar has room for it", flush=True)
+print("5. audio joins the same way, never mixed with video", flush=True)
+os.makedirs(COURSE, exist_ok=True)
+mixed = [os.path.join(COURSE, n) for n in
+         ("1.01_Intro.mp4", "1.01_Intro.mp3", "1.02_Talk.mp4", "1.02_Talk.mp3", "notes.pdf")]
+for p in mixed:
+    open(p, "wb").close()
+groups = C.plan_ticked(mixed)
+kinds = sorted(g.kind for g in groups)
+ok(kinds == ["audio", "video"],
+   "ticking video and audio together makes one file of each, not a muddle (%s)" % kinds)
+audio = [g for g in groups if g.kind == "audio"][0]
+ok(audio.output.endswith("(1.01-1.02).mp3") and all(f.endswith(".mp3") for f in audio.files),
+   "the audio join holds only the tracks, as an MP3")
+by_folder = C.plan_by_folder(mixed)
+ok(sorted(os.path.basename(g.output) for g in by_folder)
+   == ["Watercolour Basics - Complete.mp3", "Watercolour Basics - Complete.mp4"],
+   "one click gives a folder holding both one video and one audio file")
+ok(C.kind_of("x.m4a") == "audio" and C.kind_of("x.pdf") == "" and C.kind_of("x.mkv") == "video",
+   "worksheets are neither, so they never go in")
+shutil.rmtree(ROOT)
+
+if FFMPEG:
+    os.makedirs(COURSE)
+    cover = os.path.join(ROOT, "cover.jpg")
+    subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "color=c=red:size=64x64",
+                    "-frames:v", "1", cover], check=True, creationflags=C.CREATE_NO_WINDOW)
+
+    def track(path, seconds, rate=44100, codec=None, art=False):
+        raw = path + ".raw" + os.path.splitext(path)[1]
+        subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i",
+                        "sine=frequency=440:sample_rate=%d" % rate, "-t", str(seconds), "-ac", "2"]
+                       + (["-c:a", codec] if codec else []) + [raw],
+                       check=True, creationflags=C.CREATE_NO_WINDOW)
+        if art:
+            subprocess.run([FFMPEG, "-v", "error", "-i", raw, "-i", cover, "-map", "0", "-map", "1",
+                            "-c", "copy", "-disposition:v", "attached_pic", path],
+                           check=True, creationflags=C.CREATE_NO_WINDOW)
+            os.remove(raw)
+        else:
+            os.replace(raw, path)
+
+    def length(path):
+        m = re.search(r"Duration: 00:(\d+):(\d+\.\d+)", streams(path)[0])
+        return int(m.group(1)) * 60 + float(m.group(2)) if m else 0.0
+
+    print("6. real audio joins", flush=True)
+    mp3s = [os.path.join(COURSE, "1.0%d_Talk.mp3" % n) for n in (1, 2, 3)]
+    for p, secs in zip(mp3s, (3, 4, 2)):
+        track(p, secs, art=True)                 # MP3s with cover art, as downloaded
+    groups = C.plan_ticked(mp3s)
+    j = run(groups)
+    ok(len(j.done) == 1 and groups[0].copy,
+       "matching MP3s are copied, not re-encoded (%s)" % (j.failed or "ok"))
+    _out, titles = streams(j.done[0])
+    ok(abs(length(j.done[0]) - 9) < 0.2,
+       "as long as its tracks - cover art did not confuse it (%.2f s)" % length(j.done[0]))
+    ok(titles == ["1.01 Talk", "1.02 Talk", "1.03 Talk"], "one chapter per track %s" % titles)
+
+    others = [os.path.join(COURSE, n) for n in ("2.01_A.mp3", "2.02_B.m4a", "2.03_C.mp3")]
+    track(others[0], 3), track(others[1], 4, rate=48000, codec="aac"), track(others[2], 2, rate=22050)
+    groups = C.plan_ticked(others)
+    j = run(groups)
+    ok(len(j.done) == 1 and not groups[0].copy and j.done[0].endswith(".mp3"),
+       "mixed formats and rates are re-encoded to the first one's format")
+    ok(abs(length(j.done[0]) - 9) < 0.2, "and keep their full length (%.2f s)" % length(j.done[0]))
+
+    flacs = [os.path.join(COURSE, "3.0%d_Lossless.flac" % n) for n in (1, 2, 3)]
+    for p, secs in zip(flacs, (3, 4, 2)):
+        track(p, secs)
+    groups = C.plan_ticked(flacs)
+    j = run(groups)
+    ok(len(j.done) == 1 and abs(length(j.done[0]) - 9) < 0.2,
+       "FLAC keeps its full length - a copy would have claimed only the first "
+       "track's (%.2f s)" % (length(j.done[0]) if j.done else 0))
+    ok(not [f for f in os.listdir(COURSE) if f.startswith(".joining-")], "nothing left behind")
+    shutil.rmtree(ROOT)
+
+print("7. the toolbar has room for it", flush=True)
 from evd import ui as U
 app = U.App()
 app.root.attributes("-alpha", 0.0)

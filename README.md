@@ -293,7 +293,8 @@ generic extractor, so nothing changes for a direct media link.
 
 ## Combining videos into one
 
-**Combine**, in the queue toolbar, joins finished videos into a single file.
+**Combine**, in the queue toolbar, joins finished videos — or finished audio
+tracks — into a single file.
 It works two ways:
 
 - **Tick the rows you want** and press Combine. Exactly those are joined, in
@@ -315,6 +316,15 @@ lesson in another size, audio at another rate, a clip with no sound — they are
 re-encoded to match the first, letterboxed rather than stretched, with the
 sound kept in step. That takes about as long as the videos run, and the
 confirmation says so.
+
+**Audio works the same way.** Download with Quality set to *Audio only* and
+Combine joins the tracks into one file — a course's talks as a single MP3, a
+handful of lectures as an audiobook with a chapter per lecture. Video and audio
+are never mixed: tick both kinds and you get one file of each, and a folder
+holding both gets a `Complete.mp4` and a `Complete.mp3`. MP3, M4A and Opus keep
+chapters; FLAC, Ogg and WAV join correctly but have nowhere to store them.
+Matching tracks are copied instantly; tracks in different formats or sample
+rates are re-encoded to match the first, which for audio takes seconds.
 
 The joined file goes beside the originals: `Course - Complete.mp4` for a
 whole folder, `Course (1.03-1.15).mp4` for a ticked run. An earlier join is

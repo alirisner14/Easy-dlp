@@ -1049,10 +1049,10 @@ class App:
             label, icon, tip = "Stop", "x", "Stop combining - the finished files are kept"
         elif self.queue.selected:
             label, icon = "Combine", "film"
-            tip = "Join the ticked videos into one file, in queue order"
+            tip = "Join the ticked videos or audio into one file, in queue order"
         else:
             label, icon = "Combine", "film"
-            tip = ("Join each folder's finished videos into one file. "
+            tip = ("Join each folder's finished videos or audio into one file. "
                    "Tick rows first to choose which ones instead")
         if getattr(self, "_combine_compact", False):
             label = ""                  # icon only on a narrow window
@@ -1070,21 +1070,30 @@ class App:
             self.flash_footer("Combining needs ffmpeg, and none was found")
             return
 
+        def describe(g):
+            noun = "track" if g.kind == "audio" else "video"
+            return "• %s — %d %ss" % (os.path.basename(g.output), len(g.files), noun)
+
         ticked = self.queue.selected_jobs()
         if ticked:
             # in the order they sit in the queue, which is the order chosen
             paths = [j.filepath for j in ticked if j.status == D.DONE and j.filepath]
             groups = combine.plan_ticked(paths)
             if not groups:
-                self.flash_footer("Tick at least two finished videos to combine")
+                self.flash_footer("Tick at least two finished videos, or two audio "
+                                  "tracks, to combine")
                 return
-            g = groups[0]
-            ignored = len(ticked) - len(g.files)
-            detail = "%d videos into:\n%s\n\nin %s" % (
-                len(g.files), os.path.basename(g.output), os.path.dirname(g.output))
+            ignored = len(ticked) - sum(len(g.files) for g in groups)
+            what = ("pieces" if len(groups) > 1
+                    else "tracks" if groups[0].kind == "audio" else "videos")
+            detail = "the ticked %s into:\n\n%s\n\nin %s" % (
+                what, "\n".join(describe(g) for g in groups),
+                os.path.dirname(groups[0].output))
+            if len(groups) > 1:
+                detail += "\n\nVideo and audio are joined separately - one file each."
             if ignored:
-                detail += ("\n\n%d ticked item%s left out - not finished, not a "
-                           "video, or no longer on disk."
+                detail += ("\n\n%d ticked item%s left out - not finished, not video "
+                           "or audio, alone of its kind, or no longer on disk."
                            % (ignored, "" if ignored == 1 else "s"))
         else:
             paths = [j.filepath for j in self.engine.all_jobs()
@@ -1092,21 +1101,27 @@ class App:
             groups = combine.plan_by_folder(paths)
             if not groups:
                 self.flash_footer("Nothing to combine - no folder has two finished "
-                                  "videos. Tick rows to choose instead")
+                                  "videos or tracks. Tick rows to choose instead")
                 return
-            lines = ["• %s — %d videos" % (os.path.basename(g.output), len(g.files))
-                     for g in groups[:8]]
+            lines = [describe(g) for g in groups[:8]]
             if len(groups) > 8:
                 lines.append("• …and %d more" % (len(groups) - 8))
             detail = "one file per folder:\n\n" + "\n".join(lines)
 
+        has_video = any(g.kind == "video" for g in groups)
+        speed = ("Pieces from one course usually match, which makes this a quick "
+                 "copy. If they do not, they are re-encoded to match instead"
+                 + (" - for video that takes about as long as the videos run; "
+                    "audio is quick." if has_video else ", which is quick for audio."))
+        # FLAC, Ogg and WAV join correctly but have nowhere to keep chapters
+        plain = any(g.output.lower().endswith((".flac", ".ogg", ".wav")) for g in groups)
+        chapters = ("Each original becomes a chapter where the format allows - FLAC, "
+                    "Ogg and WAV cannot hold chapters, so those join without."
+                    if plain else
+                    "Each original becomes a chapter, so you can still jump between them.")
         ok = messagebox.askokcancel(
-            "Combine videos",
-            "Join %s\n\nEach original becomes a chapter, so you can still jump "
-            "between lessons. The originals are kept.\n\nLessons from one course "
-            "usually match, which makes this a quick copy. If they do not, they "
-            "are re-encoded to match instead - that takes about as long as the "
-            "videos run." % detail,
+            "Combine",
+            "Join %s\n\n%s The originals are kept.\n\n%s" % (detail, chapters, speed),
             parent=self.root)
         if not ok:
             return
