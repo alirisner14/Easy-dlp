@@ -3,11 +3,13 @@
 **On the Rise Digital** — Alison Risner
 Last updated 03 October 2026
 
-> **Template.** Replace `the software` with the product being sold, and fill in
-> `ontherisedigital@gmail.com`, `https://ontherisedigital.lemonsqueezy.com`, `Ohio`, `Lemon Squeezy`, `the price shown at checkout`.
-> This document is needed **only when selling direct** — through your own
-> site or a marketplace. If you sell through the Microsoft Store, Microsoft
-> is the seller and its terms govern the transaction instead.
+> **Template**, written to serve any product On the Rise Digital sells, on
+> any storefront. Where it says "the software", name the product; where it
+> says "the store you bought from", the storefront names itself.
+>
+> Needed **only when selling direct** — your own site, Fourthwall, Payhip or
+> similar. On the Microsoft Store, Microsoft is the seller and its terms
+> govern the transaction instead.
 
 ---
 
@@ -25,10 +27,14 @@ Contact: ontherisedigital@gmail.com
 > **If you register a DBA or form an LLC, change this line first.** It names
 > the party the customer is contracting with, and it must be accurate.
 
-Payments are processed by **Lemon Squeezy**. Depending on the provider, they may
-act as **merchant of record** — meaning they are the seller of record for tax
-purposes and their terms also apply to the transaction. Their name will
-appear on your card statement.
+We sell through more than one storefront. **Payment is processed by the store
+you bought from** — currently Fourthwall or Payhip — and that store's own
+terms also apply to your transaction. Its name, not ours, is what appears on
+your card statement.
+
+Where that store acts as **merchant of record**, it is the seller of record
+for tax purposes and calculates, collects and remits any sales tax, VAT or
+GST due. The total shown at checkout is what you pay.
 
 ## 2. You must be able to enter a contract
 
@@ -48,7 +54,7 @@ work with any particular third-party service.
 
 ## 4. Price, currency and tax
 
-**4.1** Prices are shown in USD and are listed at https://ontherisedigital.lemonsqueezy.com.
+**4.1** Prices are shown in USD on the storefront you are buying from.
 
 **4.2** Prices may change at any time. The price that applies is the one
 shown at checkout when you buy.
@@ -171,4 +177,4 @@ misunderstanding and resolve in one exchange.
 ## 16. Contact
 
 Alison Risner, trading as On the Rise Digital
-ontherisedigital@gmail.com — https://ontherisedigital.lemonsqueezy.com
+ontherisedigital@gmail.com

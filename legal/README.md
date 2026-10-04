@@ -82,18 +82,17 @@ money, delivering goods, handling refunds and answering for tax.
 | Email | ontherisedigital@gmail.com |
 | State | Ohio |
 | Currency | USD |
-| Payment provider | Lemon Squeezy |
-| Store / web address | https://ontherisedigital.lemonsqueezy.com |
+| Storefronts | Fourthwall first, Payhip likely second |
+| Web address | none yet — the storefront is the shop front |
 
 **`[VERSION]` is the only placeholder left**, in
 `shared/THIRD-PARTY-LICENCES.md`. It is per-release by design — fill it from
 `yt-dlp --version` and `ffmpeg -version` at build time, not once.
 
-If you change provider or claim a different store subdomain:
-
-```bash
-grep -rln "lemonsqueezy" legal/ | xargs sed -i 's|ontherisedigital.lemonsqueezy.com|YOUR-URL|g'
-```
+The documents name no single provider, on purpose: you sell through more
+than one storefront and will sell more than one product. They say "the store
+you bought from", which is true wherever a given copy came from and does not
+need rewriting when you add a third.
 
 Two things in `direct/COOKIE-NOTICE.md` stay open on purpose:
 `[ANALYTICS PROVIDER]` and `[PERIOD]`, in Version B only. Use Version A and
@@ -114,7 +113,7 @@ and a pattern of them endangers your payment account.
 carve-outs where law overrides. Then the clause that actually works — **at
 checkout, the buyer ticks a box requesting immediate delivery and
 acknowledging they lose the right to cancel.** That tick closes the EU/UK gap
-properly. Lemon Squeezy, Paddle and Gumroad all support it, usually as
+properly. Payhip, Paddle and Gumroad all support it, usually as
 "digital goods" or "waive withdrawal right".
 
 Offer goodwill refunds quietly for the first few months regardless. A refund

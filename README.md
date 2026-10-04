@@ -7,6 +7,16 @@
 A dark, liquid-glass desktop front end for the `yt-dlp` command line, with a
 batch download queue.
 
+> **Proprietary software.** Copyright © 2026 Alison Risner, trading as On the
+> Rise Digital. All rights reserved. Licensed, not sold — see
+> [`LICENSE`](LICENSE) and [the EULA](legal/shared/EULA.md). Versions
+> published before 2026-10-03 were MIT; that grant still covers those copies
+> and nothing after them.
+>
+> The open-source tools it uses — yt-dlp, FFmpeg, Python, Pillow, Tcl/Tk —
+> keep their own licences, listed in
+> [third-party licences](legal/shared/THIRD-PARTY-LICENCES.md).
+
 ![queue running](docs/screenshot.png)
 
 ## Run it

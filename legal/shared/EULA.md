@@ -4,7 +4,7 @@
 Published by On the Rise Digital
 Version 1.1.0 — last updated 03 October 2026
 
-> **Template.** Fill in `ontherisedigital@gmail.com`, `https://ontherisedigital.lemonsqueezy.com`, `Ohio` and
+> **Template.** Name the product where this says Easy-dlp, and check
 > `03 October 2026` before publishing. Used by both distribution routes — see
 > `../store/SUBMISSION.md` for the three sections that must change if you
 > supply this to the Microsoft Store.
@@ -219,4 +219,4 @@ bought.
 **13.6 Assignment.** You may not assign this Agreement. We may assign it as
 part of a sale or transfer of the business.
 
-**13.7 Contact.** ontherisedigital@gmail.com — https://ontherisedigital.lemonsqueezy.com
+**13.7 Contact.** ontherisedigital@gmail.com

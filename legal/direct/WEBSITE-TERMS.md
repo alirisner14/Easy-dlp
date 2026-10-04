@@ -1,6 +1,6 @@
 # Website Terms of Use
 
-**https://ontherisedigital.lemonsqueezy.com** — On the Rise Digital
+**On the Rise Digital**
 Last updated 03 October 2026
 
 > This covers **the website**, which is a different thing from the software
@@ -9,7 +9,7 @@ Last updated 03 October 2026
 > `direct/TERMS-OF-SALE.md`. Browsing this site → here.
 >
 > **You may not need this yet.** Selling through a hosted storefront means
-> the storefront's own terms cover the browsing, and Lemon Squeezy supplies
+> the storefront's own terms cover the browsing, and Fourthwall and Payhip supply
 > those. Publish this when you run a site of your own. Keeping it written
 > now costs nothing and means it is ready the day you do.
 >
@@ -19,8 +19,8 @@ Last updated 03 October 2026
 
 ## 1. Agreement
 
-By using https://ontherisedigital.lemonsqueezy.com you agree to these terms. If you do not, please do not use
-the site.
+By using our website you agree to these terms. If you do not, please do not
+use it.
 
 ## 2. Who runs this site
 

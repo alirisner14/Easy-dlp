@@ -20,7 +20,8 @@ handle sales tax yourself.
 
 | | Merchant of record | Fee | Notes |
 |---|---|---|---|
-| **Lemon Squeezy** | yes | ~5% + 50¢ | handles VAT/tax worldwide, licence keys built in |
+| **Payhip** | for EU VAT | 5%, or flat-fee plans | digital-goods focused, licence keys, EU VAT handled |
+| **Fourthwall** | **verify** | varies | creator storefront; confirm MoR status for digital goods |
 | **Paddle** | yes | ~5% + 50¢ | same; more established, slightly heavier setup |
 | **Gumroad** | yes | ~10% | simplest to start, highest fee |
 | **Fourthwall** | check | varies | creator storefront; confirm whether it is MoR for digital goods before relying on it |
@@ -40,7 +41,8 @@ a sole trader is a genuine ongoing burden, not a one-off.
 
 - [ ] `shared/EULA.md` — fill placeholders, ship in installer and install folder
 - [ ] `shared/TERMS-OF-USE.md` — ship and publish
-- [ ] `shared/PRIVACY-POLICY.md` — publish at `https://ontherisedigital.lemonsqueezy.com/privacy`
+- [ ] `shared/PRIVACY-POLICY.md` — publish at a public URL (the storefront's
+      own page section works; a public GitHub Gist also works)
 - [ ] `shared/THIRD-PARTY-LICENCES.md` — ship, and link from About
 - [ ] `direct/TERMS-OF-SALE.md` — publish, link from checkout
 - [ ] `direct/REFUND-POLICY.md` — publish, link from checkout **and** the

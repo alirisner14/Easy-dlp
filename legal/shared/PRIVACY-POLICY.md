@@ -4,7 +4,7 @@
 Last updated 03 October 2026
 
 > This must be reachable at a public URL before you can submit to the
-> Microsoft Store. Publish it at `https://ontherisedigital.lemonsqueezy.com/privacy` and give that URL in
+> Microsoft Store. Publish it at any public URL and give that URL in
 > Partner Center.
 
 ---
@@ -69,7 +69,7 @@ your connection as they would any other, subject to their own privacy
 policies.
 
 If you enable a feature that checks for a new version, it requests a single
-version file from https://ontherisedigital.lemonsqueezy.com and sends nothing but the request itself.
+version file from our storefront and sends nothing but the request itself.
 *(Remove this paragraph if you do not ship update checking.)*
 
 ## 5. Purchase information
@@ -134,11 +134,12 @@ scheduled task. It does not modify your browser or your system settings.
 ## 11. Changes
 
 If this policy changes, the updated version will be published at
-https://ontherisedigital.lemonsqueezy.com/privacy with a new date at the top. If a change ever meant we
+wherever this policy is published, with a new date at the top. If a change
+ever meant we
 started collecting something, we would say so plainly and ask first.
 
 ## 12. Contact
 
 Alison Risner, trading as On the Rise Digital
 ontherisedigital@gmail.com
-https://ontherisedigital.lemonsqueezy.com
+

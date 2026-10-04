@@ -116,7 +116,7 @@ becoming inaccessible is not a defect.
 
 We may update these Terms. The version in force for you is the one supplied
 with the version of the Software you bought. Material changes will be noted
-in the changelog and on https://ontherisedigital.lemonsqueezy.com.
+in the changelog and on the store page.
 
 ## 9. Contact
 

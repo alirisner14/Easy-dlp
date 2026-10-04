@@ -106,9 +106,14 @@ charge back without contacting us.
 
 | Where you bought | Whose policy applies |
 |---|---|
-| Our website, https://ontherisedigital.lemonsqueezy.com | this one |
-| A marketplace or storefront we sell through | this one, plus their own buyer protection |
+| Fourthwall | this one, plus Fourthwall's own buyer protection |
+| Payhip | this one, plus Payhip's own buyer protection |
+| Any other storefront we sell through | this one, plus theirs |
 | Microsoft Store | Microsoft's, which overrides this entirely |
+
+Where a storefront's own policy is more generous than this one, theirs
+applies. We will not use this document to refuse a refund a platform has
+already granted.
 
 ## 8. Contact
 

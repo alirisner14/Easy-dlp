@@ -36,7 +36,7 @@ Reasonable — you should be suspicious of software that asks you to click past
 a security warning. Two ways to satisfy yourself:
 
 - **Check the file hash.** The SHA-256 for this release is published at
-  https://ontherisedigital.lemonsqueezy.com/downloads. In PowerShell:
+  the download page you bought from. In PowerShell:
   ```powershell
   Get-FileHash .\Easy-dlp-Setup-1.1.0.exe -Algorithm SHA256
   ```
@@ -56,7 +56,7 @@ a security warning. Two ways to satisfy yourself:
 Nothing else. No toolbar, no browser extension, no background service, no
 scheduled task, no bundled "offers". Easy-dlp makes no network connection of
 its own and sends nothing anywhere. See our
-[Privacy Policy](https://ontherisedigital.lemonsqueezy.com/privacy).
+[Privacy Policy](../shared/PRIVACY-POLICY.md).
 
 It installs to your user folder, so it does not need an administrator
 password.

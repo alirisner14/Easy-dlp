@@ -32,7 +32,7 @@ We aim to reply within **2 business days**, usually sooner. Hours are
 Monday to Friday, 9am–5pm Eastern. We are not available on US public holidays.
 
 If something is badly broken for many people, we will say so publicly at
-https://ontherisedigital.lemonsqueezy.com rather than answering the same email a hundred times.
+our store page rather than answering the same email a hundred times.
 
 ## What support covers
 
@@ -74,7 +74,7 @@ missing feature is not grounds for a refund — see the
 Fixes and minor updates for the version you bought are free. See section 10
 of the [Terms of Sale](TERMS-OF-SALE.md) for how major versions work.
 
-Direct-download builds do not update themselves — check https://ontherisedigital.lemonsqueezy.com for new
+Direct-download builds do not update themselves — check the store page for new
 releases, or check the store page.
 
 ## End of life
