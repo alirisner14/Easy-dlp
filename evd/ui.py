@@ -782,6 +782,11 @@ class App:
         added = skipped = 0
         bad_ranges: list[int] = []
         keep: list[list[str]] = []      # rows to leave staged for fixing
+        # The same link twice in one batch downloads once; the repeat is
+        # skipped as "already there", records no file, and the queue then
+        # looks finished while Combine finds nothing to join. Drop repeats here.
+        taken: set[tuple[str, str]] = set()
+        repeats = 0
         for row, (name, url) in enumerate(ready, 1):
             # "link 1:30-5:00" asks for that part only. A range that does not
             # make sense - backwards, or not a time - holds the row back
@@ -795,6 +800,10 @@ class App:
             if not found:
                 skipped += 1
                 continue
+            if (found[0][0], section) in taken:
+                repeats += 1
+                continue
+            taken.add((found[0][0], section))
             final_name = name or found[0][1]
             self.engine.add(found[0][0], opts, name=final_name, section=section)
             # the batch file keeps the range with the link, the way it was
@@ -834,6 +843,9 @@ class App:
                 "start-end, like 1:30-5:00, with the end after the start"
                 % (added, "row " + str(bad_ranges[0]) if len(bad_ranges) == 1
                    else "%d rows" % len(bad_ranges)))
+        elif repeats:
+            self.flash_footer("Started %d. Left out %d repeat%s of a link already in "
+                              "this batch" % (added, repeats, "" if repeats == 1 else "s"))
         elif skipped:
             self.flash_footer("Started %d, skipped %d that were not links"
                               % (added, skipped))
@@ -1080,8 +1092,7 @@ class App:
             paths = [j.filepath for j in ticked if j.status == D.DONE and j.filepath]
             groups = combine.plan_ticked(paths)
             if not groups:
-                self.flash_footer("Tick at least two finished videos, or two audio "
-                                  "tracks, to combine")
+                self._nothing_to_combine(ticked)
                 return
             ignored = len(ticked) - sum(len(g.files) for g in groups)
             what = ("pieces" if len(groups) > 1
@@ -1100,8 +1111,7 @@ class App:
                      if j.status == D.DONE and j.filepath]
             groups = combine.plan_by_folder(paths)
             if not groups:
-                self.flash_footer("Nothing to combine - no folder has two finished "
-                                  "videos or tracks. Tick rows to choose instead")
+                self._nothing_to_combine(self.engine.all_jobs())
                 return
             lines = [describe(g) for g in groups[:8]]
             if len(groups) > 8:
@@ -1131,6 +1141,36 @@ class App:
         self._sync_combine()
         self._stat_sig = None
         self.update_stats()
+
+    def _nothing_to_combine(self, jobs):
+        """Say why there is nothing to join, in a box that cannot be missed.
+
+        This used to be a footer line that vanished in three seconds, which
+        made the button look dead. The commonest cause is worth naming: rows
+        marked done that were skipped because the file already existed - the
+        same video reached twice - so they never recorded a file of their own.
+        """
+        done = [j for j in jobs if j.status == D.DONE]
+        no_file = [j for j in done if not j.filepath or not os.path.isfile(j.filepath)]
+        lines = ["Combine needs at least two finished videos (or two audio tracks) "
+                 "that are still on disk."]
+        if not done:
+            lines.append("Nothing in the %s has finished downloading yet."
+                         % ("ticked rows" if self.queue.selected else "queue"))
+        else:
+            lines.append("%d finished row%s found, but only %d with a file to join."
+                         % (len(done), "" if len(done) == 1 else "s",
+                            len(done) - len(no_file)))
+        if no_file:
+            lines.append("%d finished row%s have no file of their own. That usually "
+                         "means the download was skipped because the same file was "
+                         "already there - often the same video listed twice. Check "
+                         "Activity, or the links you pasted, for repeats."
+                         % (len(no_file), "" if len(no_file) == 1 else "s"))
+        if not self.queue.selected:
+            lines.append("With nothing ticked, Combine joins each folder's videos; "
+                         "tick rows to choose exactly which instead.")
+        messagebox.showinfo("Nothing to combine", "\n\n".join(lines), parent=self.root)
 
     def _watch_join(self):
         """Called by the timer: report a join when it finishes."""

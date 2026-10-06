@@ -110,6 +110,13 @@
   // the list is drawn after the page settles, so give it a chance rather
   // than deciding there are no lessons a second too early
   let rows = findRows();
+  // The two collector snippets look alike in the Snippets list, and running
+  // this one on a Vimeo site just reports "no lessons". Say which one to use.
+  if (!rows.size && document.querySelector('iframe[src*="vimeo"]')) {
+    alert('This page plays its videos through Vimeo, so this is the wrong '
+        + 'collector. Run the Vimeo one (vimeo-course-links.js) instead.');
+    return;
+  }
   for (let i = 0; i < 30 && !rows.size; i++) {
     await new Promise(res => setTimeout(res, 1000));
     rows = findRows();

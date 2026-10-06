@@ -13,6 +13,28 @@ checks that the number in `evd/__init__.py`, the newest heading here, and the
 newest tag all agree, because three places that can disagree eventually
 will.
 
+## Unreleased
+
+### Fixed
+
+- **The Vimeo collector fetched one video many times over.** On a tutorial
+  post, every comment timestamp ("Jan 8, 2023") is a link back to the same
+  post with a #comment on the end, and each was taken for a separate lesson:
+  a real run queued one video seventeen times under seventeen dates. Links
+  are now compared without their #fragment or ?query, links back to the page
+  itself are ignored, and run on a single post the collector takes that
+  post's own video rather than every post its sidebar links to. As a last
+  guard, two lessons that resolve to the same video are reported rather than
+  both listed.
+- **The app queues a repeated link once.** The repeat used to be skipped as
+  "already there", record no file, and leave the queue looking finished.
+- **Combine explained nothing when there was nothing to join.** A footer line
+  that vanished in three seconds made the button look dead. It now opens a
+  box saying why - and names the usual cause, finished rows with no file of
+  their own.
+- **The Cloudflare collector, run on a Vimeo site, says so** - at once,
+  instead of after a 30-second wait for a lesson list that is never coming.
+
 ## 1.3.0 - 2026-10-04
 
 ### Added

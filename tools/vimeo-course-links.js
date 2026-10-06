@@ -144,11 +144,26 @@
 
   const lessons = [];
   const seen = new Set();
-  for (const a of document.querySelectorAll('a[href]')) {
-    const href = a.getAttribute('href') || '';
+  // The page being read, as a bare path, so links back to it can be told
+  // apart from links to other lessons.
+  const bare = h => h.split('#')[0].split('?')[0].replace(/\/+$/, '');
+  const here = bare(location.pathname);
+  // Run on a single tutorial post that has its video, the wanted video is
+  // that one - not every post its sidebar and comments happen to link to.
+  // (A course *lesson* page is different: its sidebar is the course, and
+  // collecting that is the point.)
+  const onPost = POST.test(here) && !LESSON.test(here)
+                 && !!document.querySelector(PLAYER_FRAME);
+  for (const a of (onPost ? [] : document.querySelectorAll('a[href]'))) {
+    const raw = a.getAttribute('href') || '';
+    // Compared and fetched without the #fragment or ?query. A post's comment
+    // timestamps ("Jan 8, 2023") are links back to that same post with a
+    // #comment on the end; taken one by one they made a run fetch the same
+    // video seventeen times under seventeen dates.
+    const href = bare(raw.startsWith('http') ? new URL(raw).pathname : raw);
     const isLesson = LESSON.test(href);
     const isPost = POST.test(href) && !LESSON.test(href);
-    if ((!isLesson && !isPost) || seen.has(href)) continue;
+    if ((!isLesson && !isPost) || seen.has(href) || href === here) continue;
     seen.add(href);
     const section = (href.match(/\/sections\/(\d+)/) || [])[1] || '';
     let title = (a.textContent || '').replace(/\s+/g, ' ').trim()
@@ -447,8 +462,15 @@
       lines.push(r.url + ' | 00_' + r.name + '.' + r.ext);
       fileCount++;
     }
+    // Two "lessons" that resolve to one video are one lesson reached twice.
+    // The first keeps it; the rest are reported, not queued as duplicates -
+    // which download as nothing and leave the queue looking finished.
+    const firstFor = {};
+    const repeats = [];
     for (const f of ordered) {
       const stem = f.number + '_' + camel(f.title);
+      if (f.url && firstFor[f.url]) { repeats.push(f.number); continue; }
+      if (f.url) firstFor[f.url] = f.number;
       if (f.url) lines.push(f.url + ' | ' + stem);
       for (const r of (f.files || [])) {
         // a handout keeps its lesson's number, so it sorts beside the video
@@ -479,6 +501,9 @@
       + '</div>'
       + '<div style="opacity:.8">Copy, then press Paste in Easy-dlp.'
       + (missed ? ' <b style="color:#ffb4b4">Not collected: ' + missed + '</b>' : '')
+      + (repeats.length ? ' <b style="color:#ffd27a">Left out ' + repeats.length
+         + ' that were the same video as an earlier one (' + repeats.join(', ')
+         + ').</b>' : '')
       + '</div>';
 
     const left = stragglers().length;

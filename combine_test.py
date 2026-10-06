@@ -258,6 +258,31 @@ app.engine.add("https://example.com/a.m3u8", {"outdir": "."}, name="x")
 app.queue.select_all(True)
 app.root.update()
 ok("ticked" in app.b_combine.tooltip, "with rows ticked it offers to join those instead")
+
+print("8. a repeated link is queued once, and an empty Combine says why", flush=True)
+for jid in list(app.engine.order):
+    app.engine.remove(jid)
+app.engine.start = lambda: None
+same = "https://player.vimeo.com/video/786347455"
+app.stage_data = [["01_Jan82023", same], ["02_Jan102023", same], ["03_Jan122023", same],
+                  ["Clip", same + " 1:30-2:00"], ["Other", "https://player.vimeo.com/video/957512030"]]
+app.stage_rows = []
+app.start_download()
+urls = [(j.url, j.section) for j in app.engine.all_jobs()]
+ok(len(urls) == 3, "three distinct downloads from five rows (%d)" % len(urls))
+ok(urls.count((same, "")) == 1, "the repeated link once")
+ok((same, "90-120") in urls, "but a clip of it is a different download, and kept")
+
+shown = []
+U.messagebox.showinfo = lambda title, text, **kw: shown.append((title, text))
+for j in app.engine.all_jobs():
+    j.status = D.DONE                    # finished, but no file on disk
+app.queue.select_all(False)
+app.combine_videos()
+ok(shown and shown[0][0] == "Nothing to combine",
+   "pressing Combine with nothing joinable opens a box, not a vanishing footer line")
+ok(shown and "no file of their own" in shown[0][1],
+   "and names the usual cause - rows marked done with no file")
 app.root.destroy()
 
 print(("\nALL PASS" if not fails else "\n%d FAILED" % len(fails)), flush=True)
