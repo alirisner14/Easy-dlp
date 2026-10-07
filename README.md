@@ -157,6 +157,10 @@ Course sites hand their video to one of a handful of players, and which one
 decides how much work a batch takes. What follows was tested against a real
 course on each.
 
+Not sure which one a site uses? Press **Identify** in the staging area, paste
+the video's link or the page's source, and it tells you what to do. When a
+collector snippet is needed, the window copies it for you.
+
 | Player | Tell-tale in the address | What you paste | Sign-in | Whole course at once |
 |---|---|---|---|---|
 | Bunny Stream | `b-cdn.net` | the course page source | no | **yes** — paste the page |
@@ -173,7 +177,7 @@ lesson course: all 53, correctly numbered.
 Some sites (Freya, since October 2026) sign each address instead, and a page
 carries the signature only for the lesson open on it. Pasting the page then
 stages that one lesson and says how many were locked. For the whole course,
-open it signed in, `F12` → Console → paste `tools/freya-course-links.js` →
+open it signed in, `F12` → Console → paste `tools/BunnyCollectionScript.js` →
 Enter, then **Copy** and **Paste** in the app. The signatures last a few
 hours, so download soon after collecting.
 

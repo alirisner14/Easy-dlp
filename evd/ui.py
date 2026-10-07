@@ -15,6 +15,7 @@ from . import config
 from . import errors
 from . import downloader as D
 from . import pagescan
+from . import identify as ID
 from . import combine
 from . import graphics as G
 from . import theme as T
@@ -110,6 +111,7 @@ class App:
         self.stage_rows: list[dict] = []
         self._focus_row: int | None = None
         self.log_window: LogWindow | None = None
+        self.identify_window: IdentifyWindow | None = None
         self.name_sheet: NameSheet | None = None
         self._resize_after = None
         self._last_size = (0, 0)
@@ -386,15 +388,19 @@ class App:
         # Start Download is not here but at the foot of the options card, so
         # that the folder the files land in is read past on the way to it.
         by = ry + 2
-        bw = (inner - 24) // 4
-        for i, (text, icon, tip, cmd) in enumerate([
+        buttons = [
             ("Add", "plus", "Add another row", self.add_stage_row),
             ("Paste", "clipboard", "Fill rows from the clipboard", self.paste_clipboard),
             ("Import", "folder", "Fill rows from a .txt file of links", self.import_file),
+            ("Identify", "search", "Not sure what to paste? Find out how to get "
+             "a site's videos", self.open_identify),
             ("Clear", "x", "Empty the staging list", self.clear_stage),
-        ]):
+        ]
+        last = len(buttons) - 1
+        bw = (inner - 8 * last) // len(buttons)
+        for i, (text, icon, tip, cmd) in enumerate(buttons):
             bx = x + (bw + 8) * i
-            w = bw if i < 3 else inner - (bw + 8) * 3
+            w = bw if i < last else inner - (bw + 8) * last
             self._add_left(WG.Button(cv, bx, by, w, 28, text=text, icon=icon,
                                      variant="subtle", font=T.f("small"),
                                      command=cmd, tooltip=tip))
@@ -973,7 +979,7 @@ class App:
                 "This page only unlocks the lesson that is open on it, so "
                 "%d other lesson%s can't be taken from it.\n\n"
                 "For the whole course, open the course in your browser and run "
-                "the freya-course-links snippet from the tools folder, then "
+                "the BunnyCollectionScript.js snippet from the tools folder, then "
                 "paste what it copies." % (locked, "" if locked == 1 else "s"),
                 parent=self.root)
         if not lessons and not extras:
@@ -1256,6 +1262,12 @@ class App:
             self.log_window = None
         else:
             self.log_window = LogWindow(self.root, self.engine)
+
+    def open_identify(self):
+        if self.identify_window and self.identify_window.alive():
+            self.identify_window.top.lift()
+            return
+        self.identify_window = IdentifyWindow(self.root, self)
 
     # ------------------------------------------------------------- loop --
     def flash_footer(self, message: str):
@@ -1557,6 +1569,138 @@ class LogWindow:
             self.top.destroy()
         except tk.TclError:
             pass
+
+
+# -------------------------------------------------------- identify window --
+class IdentifyWindow:
+    """Paste a link or a page's source; be told how to get its videos.
+
+    The answer is one of: paste the link, paste the page, or run a collector
+    snippet in DevTools - and in that last case the snippet is one click
+    away, copied straight from inside the app, so nobody has to find the
+    tools folder (which someone who bought the exe does not have).
+    """
+    BG = "#0A0C14"
+
+    def __init__(self, parent, app):
+        self.app = app
+        self.advice: ID.Advice | None = None
+        self._full = ""
+        self.top = tk.Toplevel(parent)
+        self.top.title("Identify - how do I get these videos?")
+        self.top.configure(bg=self.BG)
+        self.top.geometry("720x660")
+        self.top.minsize(520, 420)
+        _dark_titlebar(self.top)
+
+        def label(text, font="body", fg=T.TEXT_DIM, **pack):
+            w = tk.Label(self.top, text=text, bg=self.BG, fg=fg, font=T.f(font),
+                         justify="left", anchor="w", wraplength=680)
+            w.pack(fill="x", padx=14, **pack)
+            return w
+
+        def button(row, text, cmd, primary=False):
+            b = tk.Button(row, text=text, command=cmd,
+                          bg=T.ACCENT_HEX if primary else "#161A26",
+                          fg=T.TEXT_ON_ACCENT if primary else T.TEXT,
+                          activebackground="#222838", activeforeground=T.TEXT,
+                          bd=0, relief="flat", padx=16, pady=6,
+                          font=T.f("body_bold" if primary else "small"), cursor="hand2")
+            b.pack(side="left", padx=(0, 8))
+            return b
+
+        label("Paste a video's link, or a page's source (Ctrl+U on the page, "
+              "then Ctrl+A, Ctrl+C), and press Identify.", pady=(12, 6))
+
+        # the answer is packed from the bottom up, before the text box, so a
+        # short window shrinks the box rather than hiding the answer
+        self.actions = tk.Frame(self.top, bg=self.BG)
+        self.actions.pack(side="bottom", fill="x", padx=14, pady=(0, 14))
+        self.detail = label("", side="bottom", pady=(0, 8))
+        self.headline = label("", font="body_bold", fg=T.OK_HEX, side="bottom", pady=(6, 2))
+        row = tk.Frame(self.top, bg=self.BG)
+        row.pack(side="bottom", fill="x", padx=14, pady=8)
+        button(row, "Identify", self.run, primary=True)
+        button(row, "Paste from clipboard", self.paste)
+        button(row, "Clear", self.clear)
+
+        self.text = tk.Text(self.top, height=6, bg="#0C0F18", fg="#C7D2EA", bd=0,
+                            relief="flat", highlightthickness=1,
+                            highlightbackground="#232848", wrap="char",
+                            font=T.f("mono"), padx=10, pady=8,
+                            insertbackground=T.ACCENT_B_HEX)
+        self.text.pack(fill="both", expand=True, padx=14)
+        self.copy_btn = button(self.actions, "Copy snippet", self.copy_snippet, primary=True)
+        self.save_btn = button(self.actions, "Save snippet as file...", self.save_snippet)
+        self._show_actions(False)
+        self.text.focus_set()
+        self.top.bind("<Control-Return>", lambda _e: self.run())
+
+    def alive(self) -> bool:
+        try:
+            return bool(self.top.winfo_exists())
+        except tk.TclError:
+            return False
+
+    def _show_actions(self, on: bool):
+        for b in (self.copy_btn, self.save_btn):
+            if on:
+                b.pack(side="left", padx=(0, 8))
+            else:
+                b.pack_forget()
+
+    def clear(self):
+        self.text.delete("1.0", "end")
+        self._full = ""
+
+    def paste(self):
+        try:
+            clip = self.top.clipboard_get()
+        except tk.TclError:
+            return
+        self.text.delete("1.0", "end")
+        # a page's source can be large; a sample decides just as well and
+        # keeps the box responsive, so only the first stretch is shown
+        self.text.insert("1.0", clip[:20000])
+        self._full = clip
+        self.run()
+
+    def run(self):
+        shown = self.text.get("1.0", "end-1c")
+        full = self._full
+        text = full if full and full.startswith(shown[:2000]) and shown else shown
+        self.advice = ID.identify(text, bool(self.app.settings.get("playlists")))
+        a = self.advice
+        colour = {ID.UNKNOWN: T.WARN_HEX, ID.COPY_SOURCE: T.WARN_HEX}.get(a.kind, T.OK_HEX)
+        self.headline.configure(text=a.headline, fg=colour)
+        self.detail.configure(text=a.detail)
+        self._show_actions(bool(a.snippet))
+        if a.snippet:
+            self.copy_btn.configure(text="Copy %s" % ID.SNIPPETS[a.snippet])
+
+    def copy_snippet(self):
+        if not (self.advice and self.advice.snippet):
+            return
+        try:
+            code = ID.snippet_text(self.advice.snippet)
+        except OSError:
+            messagebox.showerror("Snippet missing", "The snippet could not be found "
+                                 "in this copy of the app.", parent=self.top)
+            return
+        self.top.clipboard_clear()
+        self.top.clipboard_append(code)
+        self.copy_btn.configure(text="Copied - now paste it in the Console")
+
+    def save_snippet(self):
+        if not (self.advice and self.advice.snippet):
+            return
+        name = ID.SNIPPETS[self.advice.snippet]
+        path = filedialog.asksaveasfilename(parent=self.top, initialfile=name,
+                                            defaultextension=".js",
+                                            filetypes=[("JavaScript", "*.js")])
+        if path:
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(ID.snippet_text(self.advice.snippet))
 
 
 # ----------------------------------------------------------- os helpers --

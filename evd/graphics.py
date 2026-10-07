@@ -277,6 +277,9 @@ def icon(name: str, size: int = 18, color=(238, 242, 255, 255), width: float = 1
         d.arc([.06 * n, .34 * n, .54 * n, .66 * n], 40, 320, fill=color, width=w)
         d.arc([.46 * n, .34 * n, .94 * n, .66 * n], 220, 140, fill=color, width=w)
         L((.36, .50), (.64, .50))
+    elif name == "search":
+        E(.14, .14, .64, .64)
+        L((.58, .58), (.86, .86))
     return img.resize((size, size), Image.LANCZOS)
 
 

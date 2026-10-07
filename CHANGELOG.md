@@ -13,14 +13,24 @@ checks that the number in `evd/__init__.py`, the newest heading here, and the
 newest tag all agree, because three places that can disagree eventually
 will.
 
-## Unreleased
+## 1.4.0 - 2026-10-07
+
+### Added
+
+- **Identify** (beside Paste in the staging area). Paste a video link or a
+  page's source and it says how to get the videos: paste the link, paste the
+  page, or run a collector snippet in DevTools. When a snippet is needed it can
+  be copied straight from the window, so the tools folder is never needed. A
+  playlist link with Playlists turned off is flagged, since only one video
+  would download.
+- The collector snippets are bundled inside the app.
 
 ### Fixed
 
 - Freya courses failed with "403 Forbidden". The site now signs each video
   address, and a page signs only the lesson open on it. A pasted page now uses
   the signed address and says how many lessons were locked;
-  `tools/freya-course-links.js` collects the signed address for every lesson.
+  `tools/BunnyCollectionScript.js` collects the signed address for every lesson.
 - Lessons on the redesigned Freya pages were named after their running time
   ("1.04_141253") instead of their title.
 

@@ -90,6 +90,9 @@ def main() -> int:
         # has to travel inside the packaged app as well
         "--add-data", "%s%sdocs" % (ROOT / "docs" / "Easy-dlp_Logo.png", os.pathsep),
         *tools,
+        # the collector snippets, which the Identify window copies out
+        *[arg for js in sorted((ROOT / "tools").glob("*.js"))
+          for arg in ("--add-data", "%s%stools" % (js, os.pathsep))],
         "--distpath", str(ROOT / "dist"),
         "--workpath", str(work / "build"),
         "--specpath", str(work),
