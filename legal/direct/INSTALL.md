@@ -38,7 +38,7 @@ a security warning. Two ways to satisfy yourself:
 - **Check the file hash.** The SHA-256 for this release is published at
   the download page you bought from. In PowerShell:
   ```powershell
-  Get-FileHash .\Easy-dlp-Setup-1.3.1.exe -Algorithm SHA256
+  Get-FileHash .\Easy-dlp-Setup-1.4.0.exe -Algorithm SHA256
   ```
   If it matches, the file you have is the file we published.
 
