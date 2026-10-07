@@ -13,6 +13,17 @@ checks that the number in `evd/__init__.py`, the newest heading here, and the
 newest tag all agree, because three places that can disagree eventually
 will.
 
+## Unreleased
+
+### Fixed
+
+- Freya courses failed with "403 Forbidden". The site now signs each video
+  address, and a page signs only the lesson open on it. A pasted page now uses
+  the signed address and says how many lessons were locked;
+  `tools/freya-course-links.js` collects the signed address for every lesson.
+- Lessons on the redesigned Freya pages were named after their running time
+  ("1.04_141253") instead of their title.
+
 ## 1.3.1 - 2026-10-06
 
 ### Fixed

@@ -964,8 +964,20 @@ class App:
         """
         lessons = pagescan.lessons_from_page(text)
         extras = pagescan.resources_from_page(text) if self.settings.get("resources", True) else []
+        locked = pagescan.locked_lessons(text)
+        if locked:
+            # the site signs each video, and only the open lesson's page
+            # carries its signature; the rest would fail with 403
+            messagebox.showinfo(
+                "This site locks its videos",
+                "This page only unlocks the lesson that is open on it, so "
+                "%d other lesson%s can't be taken from it.\n\n"
+                "For the whole course, open the course in your browser and run "
+                "the freya-course-links snippet from the tools folder, then "
+                "paste what it copies." % (locked, "" if locked == 1 else "s"),
+                parent=self.root)
         if not lessons and not extras:
-            return False
+            return bool(locked)
         self._fill_stage(lessons + extras)
         marks = pagescan.sections(name for _u, name in lessons)
         note = ""

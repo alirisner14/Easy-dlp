@@ -166,9 +166,16 @@ course on each.
 
 ### Bunny Stream — paste the page
 
-The video id alone plays, with nothing to authorise it, so the whole course
-comes out of one page. See **Staging a whole course from its page** above.
-Tested on a 53 lesson course: all 53, correctly numbered.
+On most sites the video id alone plays, so the whole course comes out of one
+page. See **Staging a whole course from its page** above. Tested on a 53
+lesson course: all 53, correctly numbered.
+
+Some sites (Freya, since October 2026) sign each address instead, and a page
+carries the signature only for the lesson open on it. Pasting the page then
+stages that one lesson and says how many were locked. For the whole course,
+open it signed in, `F12` → Console → paste `tools/freya-course-links.js` →
+Enter, then **Copy** and **Paste** in the app. The signatures last a few
+hours, so download soon after collecting.
 
 ### Cloudflare Stream — run the collector
 

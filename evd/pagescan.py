@@ -27,6 +27,18 @@ _SPACES = re.compile(r"\s+")
 # "Lesson 1.1" on the course page, a bare "1.18" in a lesson page's sidebar
 _NUMBER = re.compile(r"(?:Lesson\s+)?\b(\d{1,2})\.(\d{1,2})\b(?!\d)")
 _DURATION = re.compile(r"^\d{1,2}:\d{2}$")
+# the line above a title that is only its number and running time, together
+# or apart: "1.5 · 31:30"
+_META = re.compile(
+    r"^(?:Lesson|\d{1,2}\.\d{1,2}|\d{1,2}:\d{2}(?::\d{2})?|[^\w])+$", re.I)
+
+# Some sites sign each video's address, and a page carries a signature only
+# for the lesson open on it. The address looks like
+#   https://host/bcdn_token=...&expires=...&token_path=%2F<id>%2F/<id>/playlist.m3u8
+# and the bare .../<id>/playlist.m3u8 is refused without it.
+_SIGNED = re.compile(
+    r"https://(?P<host>[A-Za-z0-9.-]*b-cdn\.net)/bcdn_token=[^\"'\s/]*"
+    r"/(?P<guid>[0-9a-fA-F-]{36})/playlist\.m3u8")
 
 # lesson pages embed the same list as json, which also carries the numbering
 _JSON = re.compile(
@@ -105,7 +117,7 @@ def _from_anchors(text: str) -> list[tuple[str, str, str]]:
             # otherwise the title is the first paragraph that is neither the
             # running time nor the lesson number
             for para in (_plain(p) for p in _PARA.findall(card)):
-                if para and not _DURATION.match(para) and not _NUMBER.fullmatch(para):
+                if para and not _META.match(para):
                     title = para
                     break
         if not title:
@@ -150,7 +162,8 @@ def lessons_from_page(text: str) -> list[tuple[str, str]]:
     if not text or "b-cdn.net" not in text:
         return []
     # the json arrives escaped inside a <script>, so read it unescaped
-    flat = text.replace('\\"', '"').replace("\\/", "/")
+    flat = _flatten(text)
+    signed = _signed(flat)
 
     order: list[str] = []
     best: dict[str, tuple[str, str]] = {}
@@ -162,8 +175,39 @@ def lessons_from_page(text: str) -> list[tuple[str, str]]:
             # the lesson being played shows a play icon where its number
             # would be, so let a numbered copy of it win
             best[guid] = (host, name)
+    if signed:
+        # the unsigned ones would only be refused, so leave them to
+        # locked_lessons() to report
+        return [(signed[g], best[g][1]) for g in order if g in signed]
     return [("https://%s/%s/playlist.m3u8" % (best[g][0], g), best[g][1])
             for g in order]
+
+
+def _flatten(text: str) -> str:
+    # the json arrives escaped inside a <script>, so read it unescaped
+    return (text.replace('\\"', '"').replace("\\/", "/")
+            .replace("\\u0026", "&").replace("&amp;", "&"))
+
+
+def _signed(flat: str) -> dict[str, str]:
+    """Video id -> its signed address, for every one the page signs."""
+    return {m.group("guid").lower(): m.group(0) for m in _SIGNED.finditer(flat)}
+
+
+def locked_lessons(text: str) -> int:
+    """How many lessons on a signing site's page came without a signature.
+
+    Those need their own pages read - which is what the course collector
+    snippet does - since the video host refuses them otherwise.
+    """
+    if not text or "bcdn_token=" not in text:
+        return 0
+    flat = _flatten(text)
+    signed = _signed(flat)
+    if not signed:
+        return 0
+    guids = {g for g, _h, _n in _from_anchors(flat) + _from_json(flat)}
+    return len(guids - set(signed))
 
 
 # --------------------------------------------------------------- resources --
