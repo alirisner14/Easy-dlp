@@ -133,7 +133,7 @@ thumbnail. Cloudflare Stream does not work that way:
 
 So scraping ids off the page gets you ids that will not play. The links have
 to be caught as each lesson starts, which is what
-`tools/cloudflare-stream-links.js` does - it walks the lesson list and reads
+`tools/CloudflareCollectionScript.js` does - it walks the lesson list and reads
 the addresses back out of the browser's own resource timing log.
 
 Verified against a live six-lesson course: 6 of 6 captured, named and

@@ -114,7 +114,7 @@
   // this one on a Vimeo site just reports "no lessons". Say which one to use.
   if (!rows.size && document.querySelector('iframe[src*="vimeo"]')) {
     alert('This page plays its videos through Vimeo, so this is the wrong '
-        + 'collector. Run the Vimeo one (vimeo-course-links.js) instead.');
+        + 'collector. Run the Vimeo one (VimeoCollectionScript.js) instead.');
     return;
   }
   for (let i = 0; i < 30 && !rows.size; i++) {

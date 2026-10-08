@@ -157,7 +157,7 @@ Course sites hand their video to one of a handful of players, and which one
 decides how much work a batch takes. What follows was tested against a real
 course on each.
 
-Not sure which one a site uses? Press **Identify** in the staging area, paste
+Not sure which one a site uses? Press **Step 1 · Identify collection method** at the top of the staging card, paste
 the video's link or the page's source, and it tells you what to do. When a
 collector snippet is needed, the window copies it for you.
 
@@ -192,7 +192,7 @@ plays.
 2. **Press play on the first lesson** and let it start. Browsers block playback
    until you have interacted with the page, and with no playback there is no
    link to catch.
-3. `F12` → Console → paste the whole of `tools/cloudflare-stream-links.js` →
+3. `F12` → Console → paste the whole of `tools/CloudflareCollectionScript.js` →
    Enter.
 4. Wait, roughly ten seconds a lesson. A panel appears with the links.
 5. **Copy**, then **Paste** in the app.
@@ -226,7 +226,7 @@ pulls in every link on the page.
 
 ### Vimeo — run the collector, or copy one address
 
-For a whole course, `tools/vimeo-course-links.js` collects the lot:
+For a whole course, `tools/VimeoCollectionScript.js` collects the lot:
 
 1. Open the course page — the one listing the lessons — while signed in.
 2. `F12` → Console → paste the script → Enter.

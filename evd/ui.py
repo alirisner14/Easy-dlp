@@ -341,7 +341,8 @@ class App:
 
     # -- add card ------------------------------------------------------
     STAGE_ROW_H = 38
-    STAGE_TOP = 48            # section caption plus column headings
+    IDENTIFY_H = 38           # the step-one button above the rows
+    STAGE_TOP = 48 + IDENTIFY_H   # caption, that button, column headings
 
     def _add_card_height(self) -> int:
         rows = max(1, len(self.stage_data))
@@ -355,13 +356,23 @@ class App:
         cv.create_text(x, y0 + 14, text="STAGE DOWNLOADS", fill=T.TEXT_DIM, anchor="nw",
                        font=T.f("section"), tags="lui")
 
+        # Step one comes first on the card: someone with a course open and no
+        # idea what to paste is told here, before the rows ask them for a link
+        self._add_left(WG.Button(
+            cv, x, y0 + 36, inner, 30,
+            text="Step 1 · Identify collection method", icon="search",
+            variant="subtle", font=T.f("small"), command=self.open_identify,
+            tooltip="Not sure what to paste? Give it a video link or a page's "
+                    "source and it says whether to paste the link, paste the "
+                    "page, or run a collection script."))
+
         del_w, gap = 22, 8
         name_w = max(96, int((inner - del_w - gap - 6) * 0.36))
         url_w = inner - name_w - gap - del_w - 6
 
-        cv.create_text(x, y0 + 34, text="FILE NAME", fill=T.TEXT_DIM, anchor="nw",
+        cv.create_text(x, y0 + 34 + self.IDENTIFY_H, text="FILE NAME", fill=T.TEXT_DIM, anchor="nw",
                        font=T.f("tiny"), tags="lui")
-        cv.create_text(x + name_w + gap, y0 + 34, text="URL", fill=T.TEXT_DIM,
+        cv.create_text(x + name_w + gap, y0 + 34 + self.IDENTIFY_H, text="URL", fill=T.TEXT_DIM,
                        anchor="nw", font=T.f("tiny"), tags="lui")
 
         self.stage_rows = []
@@ -392,8 +403,6 @@ class App:
             ("Add", "plus", "Add another row", self.add_stage_row),
             ("Paste", "clipboard", "Fill rows from the clipboard", self.paste_clipboard),
             ("Import", "folder", "Fill rows from a .txt file of links", self.import_file),
-            ("Identify", "search", "Not sure what to paste? Find out how to get "
-             "a site's videos", self.open_identify),
             ("Clear", "x", "Empty the staging list", self.clear_stage),
         ]
         last = len(buttons) - 1
@@ -1587,7 +1596,7 @@ class IdentifyWindow:
         self.advice: ID.Advice | None = None
         self._full = ""
         self.top = tk.Toplevel(parent)
-        self.top.title("Identify - how do I get these videos?")
+        self.top.title("Identify collection method")
         self.top.configure(bg=self.BG)
         self.top.geometry("720x660")
         self.top.minsize(520, 420)

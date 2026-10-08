@@ -22,8 +22,8 @@ from . import pagescan
 # the snippets travel inside the app, so a buyer never needs the tools folder
 SNIPPETS = {
     "bunny": "BunnyCollectionScript.js",
-    "vimeo": "vimeo-course-links.js",
-    "cloudflare": "cloudflare-stream-links.js",
+    "vimeo": "VimeoCollectionScript.js",
+    "cloudflare": "CloudflareCollectionScript.js",
 }
 
 PASTE_LINK = "link"        # paste the link(s) as they are
@@ -175,11 +175,11 @@ def _from_links(text: str, playlists_on: bool) -> Advice:
     if _ends(host, "cloudflarestream.com") or _ends(host, "videodelivery.net"):
         return Advice(PASTE_LINK, "Paste the video link(s).",
                       "Signed Cloudflare links last about six hours. For a whole "
-                      "course, use the cloudflare-stream-links.js snippet.", "cloudflare")
+                      "course, use the CloudflareCollectionScript.js snippet.", "cloudflare")
     if _ends(host, "player.vimeo.com") or (_ends(host, "vimeo.com") and re.search(r"/\d{6,}", path)):
         return Advice(PASTE_LINK, "Paste the video link(s).",
                       "For a whole course that embeds Vimeo, use the "
-                      "vimeo-course-links.js snippet on the course page.", "vimeo")
+                      "VimeoCollectionScript.js snippet on the course page.", "vimeo")
     if _DIRECT.search(path) or pagescan_resource(url):
         return Advice(PASTE_LINK, "Paste the link(s).",
                       "That's a direct file address; Easy-dlp downloads it as it is.")

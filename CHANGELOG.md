@@ -13,6 +13,18 @@ checks that the number in `evd/__init__.py`, the newest heading here, and the
 newest tag all agree, because three places that can disagree eventually
 will.
 
+## Unreleased
+
+### Changed
+
+- Identify is now **Step 1 · Identify collection method**, at the top of the
+  staging card above the link rows, with a tooltip saying what it does.
+- The collection scripts share one naming scheme:
+  `VimeoCollectionScript.js` (was `vimeo-course-links.js`),
+  `CloudflareCollectionScript.js` (was `cloudflare-stream-links.js`) and
+  `BunnyCollectionScript.js`. Snippets saved in DevTools under the old names
+  still work.
+
 ## 1.4.0 - 2026-10-07
 
 ### Added
