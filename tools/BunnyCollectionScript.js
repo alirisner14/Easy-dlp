@@ -22,6 +22,15 @@
  * Nothing is downloaded here and nothing is changed on the site.
  */
 (async () => {
+  // Stamped on the bar and in the console, so an old copy saved in DevTools
+  // is easy to tell from the current one.
+  const EVD_SCRIPT = 'BunnyCollectionScript 1.4.1';
+  console.log('[evd] ' + EVD_SCRIPT);
+  // Some sites lay a full-screen layer over the page that no z-index beats.
+  // The browser's top layer does, so the bar and panel go there when they can.
+  const lift = el => {
+    try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* older browser */ }
+  };
   if (window.evdControl && window.evdControl.running) {
     alert('Already collecting on this page. Press Stop on the bar in the corner first.');
     return;
@@ -65,12 +74,16 @@
     return;
   }
 
-  // -- the bar: progress and Stop --------------------------------------------
-  const control = { running: true, stopped: false };
+  // -- the bar: progress, Pause and Stop ---------------------------------------
+  // Stop keeps what was found so far and opens the panel. The same controls
+  // work from the console: evdPause(), evdResume(), evdStop().
+  const control = { running: true, paused: false, stopped: false };
   window.evdControl = control;
-  window.evdStop = () => { control.stopped = true; return 'stopping'; };
+  window.evdStop = () => { control.stopped = true; control.paused = false; return 'stopping'; };
+  window.evdPause = () => { control.paused = true; pauseBtn.textContent = 'Resume'; return 'paused'; };
+  window.evdResume = () => { control.paused = false; pauseBtn.textContent = 'Pause'; return 'resumed'; };
   const bar = document.createElement('div');
-  bar.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;'
+  bar.style.cssText = 'position:fixed;inset:auto;right:16px;bottom:16px;margin:0;z-index:2147483647;'
     + 'background:#0e1020;color:#e8ecff;border:2px solid #6c7cff;border-radius:12px;'
     + 'padding:10px 12px;font:13px system-ui;display:flex;gap:10px;align-items:center';
   const barText = document.createElement('span');
@@ -79,14 +92,22 @@
   stopBtn.style.cssText = 'border:0;border-radius:8px;padding:7px 12px;cursor:pointer;'
     + 'font:600 12px system-ui;color:#fff;background:#b3424a';
   stopBtn.onclick = () => window.evdStop();
-  bar.append(barText, stopBtn);
+  const pauseBtn = document.createElement('button');
+  pauseBtn.textContent = 'Pause';
+  pauseBtn.style.cssText = stopBtn.style.cssText + ';background:#3a4170';
+  pauseBtn.onclick = () => (control.paused ? window.evdResume() : window.evdPause());
+  bar.append(barText, pauseBtn, stopBtn);
   document.body.appendChild(bar);
+  bar.title = EVD_SCRIPT;
+  lift(bar);
 
   // -- read each lesson's page for its signed address --------------------------
   const flatten = t => t.replace(/\\"/g, '"').replace(/\\\//g, '/')
     .replace(/\\u0026/g, '&').replace(/&amp;/g, '&');
   let done = 0;
   for (const l of lessons) {
+    if (control.paused) barText.textContent = 'Paused at ' + done + ' of ' + lessons.length;
+    while (control.paused && !control.stopped) await wait(250);
     if (control.stopped) { l.why = 'not reached'; continue; }
     barText.textContent = 'Reading lesson ' + (++done) + ' of ' + lessons.length;
     try {
@@ -130,7 +151,7 @@
   document.getElementById('evd-box')?.remove();
   const panel = document.createElement('div');
   panel.id = 'evd-box';
-  panel.style.cssText = 'position:fixed;inset:5% 8% 76px 8%;z-index:2147483646;background:#0e1020;'
+  panel.style.cssText = 'position:fixed;inset:5% 8% 76px 8%;margin:0;width:auto;height:auto;z-index:2147483646;background:#0e1020;'
     + 'color:#e8ecff;border:2px solid #6c7cff;border-radius:14px;padding:16px;'
     + 'font:13px system-ui;display:flex;flex-direction:column;gap:10px';
   const heading = document.createElement('div');
@@ -161,4 +182,5 @@
   close.onclick = () => panel.remove();
   panel.append(heading, box, copy, close);
   document.body.appendChild(panel);
+  lift(panel);
 })();

@@ -38,6 +38,15 @@
  * The links expire about six hours after capture, so download the same day.
  */
 (async () => {
+  // Stamped on the bar and in the console, so an old copy saved in DevTools
+  // is easy to tell from the current one.
+  const EVD_SCRIPT = 'CloudflareCollectionScript 1.4.1';
+  console.log('[evd] ' + EVD_SCRIPT);
+  // Some sites lay a full-screen layer over the page that no z-index beats.
+  // The browser's top layer does, so the bar and panel go there when they can.
+  const lift = el => {
+    try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* older browser */ }
+  };
   // Running it twice at once would click through two runs' lessons at the
   // same time and tangle both results together.
   if (window.evdControl && window.evdControl.running) {
@@ -145,7 +154,7 @@
 
   const bar = document.createElement('div');
   bar.id = 'evd-bar';
-  bar.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;'
+  bar.style.cssText = 'position:fixed;inset:auto;right:16px;bottom:16px;margin:0;z-index:2147483647;'
     + 'background:#0e1020;color:#e8ecff;border:2px solid #6c7cff;border-radius:12px;'
     + 'padding:10px 12px;font:13px system-ui;display:flex;gap:10px;align-items:center;'
     + 'box-shadow:0 10px 30px rgba(0,0,0,.5)';
@@ -180,6 +189,8 @@
   pauseBtn.onclick = () => (control.paused ? window.evdResume() : window.evdPause());
   stopBtn.onclick = () => window.evdStop();
   document.body.appendChild(bar);
+  bar.title = EVD_SCRIPT;
+  lift(bar);
   showProgress();
 
   const found = [];
@@ -230,7 +241,7 @@
   document.getElementById('evd-box')?.remove();
   const wrap = document.createElement('div');
   wrap.id = 'evd-box';
-  wrap.style.cssText = 'position:fixed;inset:5% 8%;z-index:2147483647;background:#0e1020;'
+  wrap.style.cssText = 'position:fixed;inset:5% 8%;margin:0;width:auto;height:auto;z-index:2147483647;background:#0e1020;'
     + 'color:#e8ecff;border:2px solid #6c7cff;border-radius:14px;padding:16px;'
     + 'font:13px system-ui;display:flex;flex-direction:column;gap:10px;'
     + 'box-shadow:0 20px 60px rgba(0,0,0,.6)';
@@ -267,4 +278,5 @@
 
   wrap.append(ta, copy, close);
   document.body.appendChild(wrap);
+  lift(wrap);
 })();

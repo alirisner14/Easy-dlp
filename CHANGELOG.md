@@ -13,7 +13,19 @@ checks that the number in `evd/__init__.py`, the newest heading here, and the
 newest tag all agree, because three places that can disagree eventually
 will.
 
-## Unreleased
+## 1.4.1 - 2026-10-07
+
+### Fixed
+
+- The collection scripts' Pause/Stop bar and links panel could be hidden under
+  a site's own full-screen layer. They now go in the browser's top layer, above
+  anything the page draws.
+- `BunnyCollectionScript.js` had Stop but no Pause; it now has both.
+
+### Added
+
+- Each script stamps its name and version in the console and on the bar's
+  tooltip, so an old copy saved in DevTools is easy to spot.
 
 ### Changed
 

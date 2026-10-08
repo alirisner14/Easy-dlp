@@ -114,12 +114,12 @@ free, scriptable and the standard choice. A minimal script:
 ```
 [Setup]
 AppName=Easy-dlp
-AppVersion=1.4.0
+AppVersion=1.4.1
 AppPublisher=Your Name
 DefaultDirName={autopf}\Easy-dlp
 DefaultGroupName=Easy-dlp
 UninstallDisplayIcon={app}\Easy-dlp.exe
-OutputBaseFilename=Easy-dlp-Setup-1.4.0
+OutputBaseFilename=Easy-dlp-Setup-1.4.1
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
@@ -191,7 +191,7 @@ signs qualifying open-source projects free at OV level. Worth checking before
 you move off MIT, not after.
 
 ```bash
-signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "Easy-dlp-Setup-1.4.0.exe"
+signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /a "Easy-dlp-Setup-1.4.1.exe"
 ```
 
 Always timestamp (`/tr`). Without it, every signature stops validating the day

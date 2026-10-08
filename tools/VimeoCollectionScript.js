@@ -52,6 +52,15 @@
  * reads addresses the browser already has.
  */
 (async () => {
+  // Stamped on the bar and in the console, so an old copy saved in DevTools
+  // is easy to tell from the current one.
+  const EVD_SCRIPT = 'VimeoCollectionScript 1.4.1';
+  console.log('[evd] ' + EVD_SCRIPT);
+  // Some sites lay a full-screen layer over the page that no z-index beats.
+  // The browser's top layer does, so the bar and panel go there when they can.
+  const lift = el => {
+    try { el.popover = 'manual'; el.showPopover(); } catch (e) { /* older browser */ }
+  };
   // Running it twice at once would double the load on the site and tangle
   // the two runs' results together.
   if (window.evdControl && window.evdControl.running) {
@@ -247,7 +256,7 @@
 
   const bar = document.createElement('div');
   bar.id = 'evd-bar';
-  bar.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;'
+  bar.style.cssText = 'position:fixed;inset:auto;right:16px;bottom:16px;margin:0;z-index:2147483647;'
     + 'background:#0e1020;color:#e8ecff;border:2px solid #6c7cff;border-radius:12px;'
     + 'padding:10px 12px;font:13px system-ui;display:flex;gap:10px;align-items:center;'
     + 'box-shadow:0 10px 30px rgba(0,0,0,.5)';
@@ -287,6 +296,8 @@
     Object.assign(tally, { done: 0, of, ok: 0, missed: 0, what });
     control.running = true; control.paused = false; control.stopped = false;
     document.body.appendChild(bar);
+    bar.title = EVD_SCRIPT;
+    lift(bar);
     showProgress();
   };
   const endBar = () => { bar.remove(); control.running = false; };
@@ -413,7 +424,7 @@
   // most of an hour for no reason.
   const panel = document.createElement('div');
   panel.id = 'evd-box';
-  panel.style.cssText = 'position:fixed;inset:5% 8% 76px 8%;z-index:2147483646;background:#0e1020;'
+  panel.style.cssText = 'position:fixed;inset:5% 8% 76px 8%;margin:0;width:auto;height:auto;z-index:2147483646;background:#0e1020;'
     + 'color:#e8ecff;border:2px solid #6c7cff;border-radius:14px;padding:16px;'
     + 'font:13px system-ui;display:flex;flex-direction:column;gap:10px;'
     + 'box-shadow:0 20px 60px rgba(0,0,0,.6)';
@@ -548,5 +559,6 @@
   row.append(copy, again, carry);
   panel.append(heading, box, row, close);
   document.body.appendChild(panel);
+  lift(panel);
   render();
 })();
